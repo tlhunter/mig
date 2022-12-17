@@ -43,6 +43,9 @@ MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig init
 # list all migrations
 mig ls
 
+# check health of migrations, look for bugs, list unexecuted migrations
+mig status
+
 # create a migration named YYYY-MM-DD-HH-mm-ss-add_users_table.sql
 mig create "Add users table"
 
@@ -97,21 +100,23 @@ Files can be created by hand or can be created with `mig create`. Files need to 
 Here are examples of migration filenames:
 
 ```
-2022-12-11-12-15_create_users.sql
-2022-12-14-12-15_create_projects.sql
-2022-12-17-12-15_link_users_to_projects.sql
+2022-12-11-09-37-00_create_users.sql
+2022-12-14-12-15-00_create_projects.sql
+2022-12-17-23-41-00_link_users_to_projects.sql
 ```
 
 That said, `mig` also needs to support rollbacks of queries. If these files are purely SQL files then it probably requires that we have two separate files. For example, this could look like so:
 
 ```
-2022-12-11-12-15_create_users.up.sql                 2022-12-11-12-15_create_users.down.sql
-2022-12-14-12-15_create_projects.up.sql              2022-12-14-12-15_create_projects.down.sql
-2022-12-17-12-15_link_users_to_projects.up.sql       2022-12-17-12-15_link_users_to_projects.down.sql
+2022-12-11-09-37-00_create_users.up.sql                 2022-12-11-09-37-00_create_users.down.sql
+2022-12-14-12-15-00_create_projects.up.sql              2022-12-14-12-15-00_create_projects.down.sql
+2022-12-17-23-41-00_link_users_to_projects.up.sql       2022-12-17-23-41-00_link_users_to_projects.down.sql
 ```
 
 This is annoying because now two files need to be maintained. If a developer wants to change the name of one they need to change the name of the other. On the bright side SQL syntax highlighting still works perfectly for these files.
 
 What Knex does is use JavaScript files that export an `up` and `down` function that get executed. This sucks because syntax highlighting doesn't work and the user must write langague-dependent code. On the bright side it's a single file solution.
+
+One could invent a file syntax to deliminate SQL queries, but then SQL syntax highlighting might break.
 
 Another approach would be to do something like create two SQL functions within each migration file, and these functions could then encompass the SQL queries that are to be run. This would then allow single file migrations for each up/down pair and maintain SQL highlighting. Most application developers don't know SQL function syntax but the `mig create` command handles creating files with the scaffolding present so it would be a non issue. This requires more research to define.
