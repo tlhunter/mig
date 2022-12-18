@@ -14,6 +14,18 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 `mig` aims to be that tool.
 
 
+## v0.1 Progress
+
+- [ ] parse configuration from RC file, env vars, CLI flags
+- [ ] connect to PG database
+- [ ] decide on a migration file format
+- [ ] implement `mig create`
+- [ ] implement `mig init`
+- [ ] implement `mig ls`
+- [ ] implement `mig status`
+- [ ] implement `mig runup`
+
+
 ## What is a Migration Runner?
 
 A migration runner allows a developer to mutate a database schema in such a way that the mutations may be checked into a code repository. This is convenient because databaes mutations can be checked in alongside of code changes. It allows, say, SQL schema changes to be audited and visible and close to application code.
