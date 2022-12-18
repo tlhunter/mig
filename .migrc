@@ -1,1 +1,2 @@
 MIG_CONNECTION="postgresql://username:password@host:port/dbname"
+MIG_MIGRATIONS="./migrations"

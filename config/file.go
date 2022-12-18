@@ -8,6 +8,10 @@ import (
 	"os"
 )
 
+const (
+	MIGRC = ".migrc"
+)
+
 func File() {
 	cwd, err := os.Getwd()
 
@@ -17,7 +21,7 @@ func File() {
 
 	fmt.Println("Current Directory:", cwd)
 
-	contents, err := ioutil.ReadFile(cwd + "/" + ".migrc")
+	contents, err := ioutil.ReadFile(cwd + "/" + MIGRC)
 
 	if err != nil {
 		fmt.Println(err)

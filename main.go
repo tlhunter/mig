@@ -9,7 +9,7 @@ import (
 func main() {
 	fmt.Println("Welcome to mig.")
 
-	config.Flags()
-	config.Environment()
-	config.File()
+	config.GetConfig()
+
+	//pq.ParseURL
 }
