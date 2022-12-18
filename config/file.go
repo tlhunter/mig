@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	MIGRC = ".migrc"
+	MIGRC = ".migrc" // TODO: allow override via --file
 )
 
 func File() (MigConfig, error) {
@@ -22,6 +22,8 @@ func File() (MigConfig, error) {
 	}
 
 	//var path = cwd
+
+	// TODO
 
 	fmt.Println("Current Directory:", cwd)
 

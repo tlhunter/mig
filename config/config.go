@@ -7,9 +7,13 @@ import "errors"
 // Env Vars
 // File Config
 
+const (
+	DEF_MIG_DIR = "./migrations"
+)
+
 type MigConfig struct {
-	connection string // DB connection string
-	migrations string // migrations directory, e.g. ./migrations
+	Connection string // DB connection string
+	Migrations string // migrations directory, e.g. ./migrations
 }
 
 func GetConfig() (MigConfig, error) {
@@ -19,24 +23,24 @@ func GetConfig() (MigConfig, error) {
 
 	config := MigConfig{}
 
-	if flagConfig.connection != "" {
-		config.connection = flagConfig.connection
-	} else if envConfig.connection != "" {
-		config.connection = envConfig.connection
-	} else if fileConfig.connection != "" {
-		config.connection = fileConfig.connection
+	if flagConfig.Connection != "" {
+		config.Connection = flagConfig.Connection
+	} else if envConfig.Connection != "" {
+		config.Connection = envConfig.Connection
+	} else if fileConfig.Connection != "" {
+		config.Connection = fileConfig.Connection
 	} else {
 		return config, errors.New("unable to determinte server connection")
 	}
 
-	if flagConfig.migrations != "" {
-		config.migrations = flagConfig.migrations
-	} else if envConfig.migrations != "" {
-		config.migrations = envConfig.migrations
-	} else if fileConfig.migrations != "" {
-		config.migrations = fileConfig.migrations
+	if flagConfig.Migrations != "" {
+		config.Migrations = flagConfig.Migrations
+	} else if envConfig.Migrations != "" {
+		config.Migrations = envConfig.Migrations
+	} else if fileConfig.Migrations != "" {
+		config.Migrations = fileConfig.Migrations
 	} else {
-		return config, errors.New("unable to determinte migrations directory")
+		config.Migrations = DEF_MIG_DIR // TODO: combine with CWD for absolute path
 	}
 
 	return config, nil

@@ -15,8 +15,8 @@ func Environment() (MigConfig, error) {
 	println("mig env", migrations)
 
 	config := MigConfig{
-		connection: connection,
-		migrations: migrations,
+		Connection: connection,
+		Migrations: migrations,
 	}
 
 	return config, nil

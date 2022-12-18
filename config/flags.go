@@ -17,8 +17,8 @@ func Flags() (MigConfig, error) {
 	fmt.Println("mig flag", migrations)
 
 	config := MigConfig{
-		connection: *connection,
-		migrations: *migrations,
+		Connection: *connection,
+		Migrations: *migrations,
 	}
 
 	return config, nil
