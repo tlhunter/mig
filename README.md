@@ -16,14 +16,19 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 
 ## v0.1 Progress
 
-- [ ] parse configuration from RC file, env vars, CLI flags
+- [X] parse env vars
+- [X] parse CLI flags
+- [ ] parse config files
 - [ ] connect to PG database
 - [ ] decide on a migration file format
 - [ ] implement `mig create`
 - [ ] implement `mig init`
+- [ ] implement `mig lock` and `mig unlock`
 - [ ] implement `mig ls`
 - [ ] implement `mig status`
 - [ ] implement `mig runup`
+- [ ] implement the other subcommands
+- [ ] write guides for migrating from other tools to `mig`
 
 
 ## What is a Migration Runner?
@@ -57,6 +62,9 @@ MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig init
 `mig` will support various flags and subcommands.
 
 ```sh
+# create the necessary migration tables
+mig init
+
 # list all migrations
 mig ls
 
@@ -65,9 +73,6 @@ mig status
 
 # create a migration named YYYY-MM-DD-HH-mm-ss-add_users_table.sql
 mig create "Add users table"
-
-# create the necessary migration tables
-mig init
 
 # run the next single migration, if it exists
 mig runup
