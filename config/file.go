@@ -12,12 +12,16 @@ const (
 	MIGRC = ".migrc"
 )
 
-func File() {
+func File() (MigConfig, error) {
+	config := MigConfig{}
+
 	cwd, err := os.Getwd()
 
 	if err != nil {
-		fmt.Println(err)
+		return config, err
 	}
+
+	//var path = cwd
 
 	fmt.Println("Current Directory:", cwd)
 
@@ -27,5 +31,9 @@ func File() {
 		fmt.Println(err)
 	}
 
+	// path, _ := filepath.Split(path)
+
 	fmt.Println(".migrc:", string(contents))
+
+	return config, nil
 }

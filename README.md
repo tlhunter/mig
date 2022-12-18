@@ -25,6 +25,11 @@ Not only can a database mutate forward, but it's also important to allow migrati
 
 `mig` will be a single precompiled binary for running migrations on various platforms. Configuration can be achieved via environment variables, CLI flags, or even a config file. The config file will probably resemble a `.env` file with simple key=value pairs. `mig` will look in the current directory and traverse upwards until it finds a config file. Env vars will override the config file, and CLI flags will have the highest priority.
 
+Configuration contains at least the following data:
+
+* Connection string
+* Migrations directory
+
 ### Credentials
 
 A SQL connection string is all we need for this. Basically it looks like `protocol://user:pass@host:port/dbname`.
@@ -71,6 +76,15 @@ mig rundownto YYYY-MM-DD-HH-mm-ss-add_users_table --force
 # forcefully set / unset the lock, useful for fixing error scenarios
 mig lock
 mig unlock
+```
+
+Common flags include:
+
+```sh
+mig --connection 'connection string'
+mig --migrations './migrations'
+mig --file prod.migrc
+mig --debug
 ```
 
 
