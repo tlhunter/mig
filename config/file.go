@@ -1,41 +1,49 @@
 package config
 
-// look for a file named .migrc in the current directory up to the root
-
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
+	"path/filepath"
+
+	"github.com/joho/godotenv"
 )
 
 const (
 	MIGRC = ".migrc" // TODO: allow override via --file
 )
 
-func File() (MigConfig, error) {
-	config := MigConfig{}
-
-	cwd, err := os.Getwd()
-
-	if err != nil {
-		return config, err
-	}
-
-	//var path = cwd
-
-	// TODO
-
-	fmt.Println("Current Directory:", cwd)
-
-	contents, err := ioutil.ReadFile(cwd + "/" + MIGRC)
+// Check the current working directory of the process for a .migrc file.
+// If the file is found then read the contents and set it as environment variables.
+// Existing environment variables are not overwritten in this manner.
+// If a file isn't found in the current directory then check the parent directory.
+// This repeats until reaching the root directory.
+func SetEnvFromConfigFile() error {
+	dir, err := os.Getwd()
 
 	if err != nil {
-		fmt.Println(err)
+		// something bad is happening
+		return err
 	}
 
-	// path, _ := filepath.Split(path)
+	for {
+		candidate := filepath.Join(dir, MIGRC)
 
-	fmt.Println(".migrc:", string(contents))
+		if _, err := os.Stat(candidate); err == nil {
+			err = godotenv.Load(candidate)
 
-	return config, nil
+			if err != nil {
+				// bad file or bad perms
+				return err
+			}
+
+			return nil
+		}
+
+		if dir == "/" {
+			// reached root w/ no file, giving up
+			return nil
+		}
+
+		// visit parent
+		dir = filepath.Dir(dir)
+	}
 }

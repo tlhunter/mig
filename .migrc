@@ -1,2 +1,2 @@
-MIG_CONNECTION="postgresql://username:password@host:port/dbname"
+MIG_CONNECTION="postgresql://postgres:hunter2@127.0.0.1:5432/postgres"
 MIG_MIGRATIONS="./migrations"

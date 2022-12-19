@@ -7,12 +7,9 @@ const (
 	MIGRATIONS = "MIG_MIGRATIONS"
 )
 
-func Environment() (MigConfig, error) {
+func GetConfigFromEnvVars() (MigConfig, error) {
 	connection := os.Getenv(CONNECTION)
 	migrations := os.Getenv(MIGRATIONS)
-
-	println("conn env", connection)
-	println("mig env", migrations)
 
 	config := MigConfig{
 		Connection: connection,

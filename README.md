@@ -18,7 +18,7 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 
 - [X] parse env vars
 - [X] parse CLI flags
-- [ ] parse config files
+- [X] parse config files
 - [ ] connect to PG database
 - [ ] decide on a migration file format
 - [ ] implement `mig create`
