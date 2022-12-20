@@ -20,7 +20,7 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 - [X] parse CLI flags
 - [X] parse config files
 - [X] connect to PG database
-- [ ] decide on a migration file format
+- [X] decide on a migration file format
 - [ ] implement `mig create`
 - [ ] implement `mig init`
 - [ ] implement `mig lock` and `mig unlock`
@@ -71,7 +71,7 @@ mig ls
 # check health of migrations, look for bugs, list unexecuted migrations
 mig status
 
-# create a migration named YYYY-MM-DD-HH-mm-ss-add_users_table.sql
+# create a migration named YYYYMMDDHHmmss-add_users_table.sql
 mig create "Add users table"
 
 # run the next single migration, if it exists
@@ -82,13 +82,13 @@ mig runall
 
 # run migrations up to and including the migration of this name
 # if the named migration doesn't exist or isn't unexecuted then do nothing
-mig runto YYYY-MM-DD-HH-mm-ss-add_users_table
+mig runto YYYYMMDDHHmmss-add_users_table
 
 # rolls back a single migration, prompting user to confirm, unless --force is provided
 mig rundown --force
 
 # rolls back migrations until the named migration is met, prompting user to confirm, unless --force is provided
-mig rundownto YYYY-MM-DD-HH-mm-ss-add_users_table --force
+mig rundownto YYYYMMDDHHmmss-add_users_table --force
 
 # forcefully set / unset the lock, useful for fixing error scenarios
 mig lock
@@ -119,48 +119,41 @@ As far as DBMS go, I think it'll first support Postgres and will later add suppo
 Ideally the binary will be less than 10MB.
 
 
-## Development
-
-The language that `mig` is built in should only be of interest to those who want to contribute. Users of `mig` shouldn't care at all. One requirement is that `mig` is distributable as a compiled binary. I'm leaning towards Go, but certainly Rust would also be an option. Interpreted languages such as Node.js or Python or Ruby would be out of the question.
-
-
 ## Migration Files
 
-Files can be created by hand or can be created with `mig create`. Files need to be uniquely named with an implicit order. The pattern that Knex uses is to prefix names with an ISO-8601 date and include a human-readable name for convenience. The timestamp is used for ordering and ensuring that migrations are executed in the proper order. In modern application development, users write code in parallel and check-in and merge then in non-deterministic order. For that reason an incrementing migration name doesn't work. Both engineers could run `i++` and get the same number.
+Files can be created by hand or can be created with `mig create`. Files need to be uniquely named with an implicit order. `mig` has chosen to use a number based on the ISO-8601 date/time standard. This is used to ensure that migrations are executed in the proper order. This time is suffixed with a human-readable name for developer convenience.
+
+In modern application development developers write code in parallel and check-in and merge them in non-deterministic order. For that reason an incrementing integer migration name just doesn't work. For example if migration "17" is checked-in and two engineers increment it they'll both end up with "18".
 
 Here are examples of migration filenames:
 
 ```
-2022-12-11-09-37-00_create_users.sql
-2022-12-14-12-15-00_create_projects.sql
-2022-12-17-23-41-00_link_users_to_projects.sql
+20221211093700-create_users.sql
+20221214121500-create_projects.sql
+20221217234100-link_users_to_projects.sql
 ```
 
-That said, `mig` also needs to support rollbacks of queries. If these files are purely SQL files then it probably requires that we have two separate files. For example, this could look like so:
+When modifying a database schema we can think of it as evolving the database. This evolution can be referred to as going "up". However, sometimes we'll create a migration that ends in disaster. When that happens we'll need to reverse this operation, referred to as going "down". For that reason a given migration file is made up of a pair of migrations: one up migration and one down migration.
 
-```
-2022-12-11-09-37-00_create_users.up.sql            2022-12-11-09-37-00_create_users.down.sql
-2022-12-14-12-15-00_create_projects.up.sql         2022-12-14-12-15-00_create_projects.down.sql
-2022-12-17-23-41-00_link_users_to_projects.up.sql  2022-12-17-23-41-00_link_users_to_projects.down.sql
-```
+_Note that generally a "down" migration is a destructive operation. Running them should only happen to recover from disaster. In fact, many teams that use databaes migrations only crate "up" migrations._
 
-This is annoying because now two files need to be maintained. If a developer wants to change the name of one they need to change the name of the other. On the bright side SQL syntax highlighting still works perfectly for these files.
+These schema evolutions are represented as SQL queries. Often times they can be represented as a single query but in practice it's very common to require multiple queries. Sometimes a given up migration just can't be represented with a down migration, so we allow a migration to be empty as well. For this reason we say that a migration is made up of zero or more queries.
 
-What Knex does is use JavaScript files that export an `up` and `down` function that get executed. This sucks because syntax highlighting doesn't work and the user must write langague-dependent code. On the bright side it's a single file solution.
+In order to allow SQL syntax highlighting to play nicely with migration files we'll make use of SQL comments to deliminate which part of the files is the up or the down migration.
 
-One could invent a file syntax to deliminate SQL queries, but then SQL syntax highlighting might break. If using predefined SQL comments as a delimiter then syntax works and queries are fine. Imagine something like this:
+Here's an example of a migration file:
 
 ```sql
--- BEGIN UP MIGRATION
-CREATE TABLE foo;
-INSERT INTO foo;
--- END UP MIGRATION
+--BEGIN MIGRATION UP--
+CREATE TABLE user (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+--END MIGRATION UP--
 
--- BEGIN DOWN MIGRATION
-DROP TABLE foo;
--- END DOWN MIGRATION
+--BEGIN MIGRATION DOWN--
+DROP TABLE user;
+--END MIGRATION DOWN--
 ```
 
-Another approach would be to do something like create two SQL functions within each migration file, and these functions could then encompass the SQL queries that are to be run. This would then allow single file migrations for each up/down pair and maintain SQL highlighting. Most application developers don't know SQL function syntax but the `mig create` command handles creating files with the scaffolding present so it would be a non issue. This requires more research to define.
-
-Probably all queries need to be wrapped in an implicit transaction as the individual queries should be all or nothing.
+A migration file must contain one up migration block and one down migration block, and in that order. Any content outside of these two blocks is ignored. The queries that make up a block are executed in order and queries can span multiple lines. Queries are wrapped in an implicit transaction since we don't want a migration to only be executed partially.

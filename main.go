@@ -7,6 +7,7 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/tlhunter/mig/config"
+	"github.com/tlhunter/mig/migrations"
 )
 
 func main() {
@@ -18,6 +19,13 @@ func main() {
 	}
 
 	fmt.Printf("cfg: %v\n", cfg)
+
+	queries, err := migrations.GetQueriesFromFile("./tests/20221219184300-example.sql")
+
+	fmt.Println("UP")
+	fmt.Println(queries.Up)
+	fmt.Println("DOWN")
+	fmt.Println(queries.Down)
 
 	parsed, err := pq.ParseURL(cfg.Connection)
 

@@ -1,0 +1,16 @@
+-- junk
+
+--BEGIN MIGRATION UP--
+CREATE TABLE foo (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL
+);
+--END MIGRATION UP--
+
+-- junk
+
+--BEGIN MIGRATION DOWN--
+DROP TABLE foo;
+--END MIGRATION DOWN--
+
+-- junk
