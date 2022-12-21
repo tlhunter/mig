@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/lib/pq"
+	"github.com/tlhunter/mig/commands"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/migrations"
 )
@@ -19,6 +20,8 @@ func main() {
 	}
 
 	fmt.Printf("cfg: %v\n", cfg)
+
+	commands.Dispatch()
 
 	queries, err := migrations.GetQueriesFromFile("./tests/20221219184300-example.sql")
 

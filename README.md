@@ -21,7 +21,7 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 - [X] parse config files
 - [X] connect to PG database
 - [X] decide on a migration file format
-- [ ] implement `mig create`
+- [X] implement `mig create`
 - [ ] implement `mig init`
 - [ ] implement `mig lock` and `mig unlock`
 - [ ] implement `mig ls`
