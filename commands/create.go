@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/tlhunter/mig/config"
 )
 
 const TEMPLATE = `--BEGIN MIGRATION UP--
@@ -19,7 +21,7 @@ DROP TABLE foo;
 
 // TODO: Allow custom template file path in config
 
-func CommandCreate(rawName string) error {
+func CommandCreate(cfg config.MigConfig, rawName string) error {
 	name := strings.ToLower(rawName)
 	name = strings.Replace(name, " ", "_", -1)
 	now := time.Now()
@@ -31,7 +33,11 @@ func CommandCreate(rawName string) error {
 		now.Hour(), now.Minute(), now.Second(),
 		name)
 
-	file, err := os.Create("migrations/" + filename)
+	fmt.Println("MIG", cfg.Migrations)
+
+	filePath := cfg.Migrations + "/" + filename
+
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
@@ -42,6 +48,8 @@ func CommandCreate(rawName string) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("created migration: " + filePath)
 
 	return nil
 	// TODO: Write file

@@ -18,7 +18,7 @@ func Dispatch(cfg config.MigConfig) {
 	switch os.Args[1] {
 	case "create":
 		if len(os.Args) >= 3 {
-			CommandCreate(os.Args[2])
+			CommandCreate(cfg, os.Args[2])
 			return
 		}
 		fmt.Println("usage: mig create '<migration name>'")
