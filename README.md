@@ -23,7 +23,7 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 - [X] decide on a migration file format
 - [X] implement `mig create`
 - [X] implement `mig init`
-- [ ] implement `mig lock` and `mig unlock`
+- [X] implement `mig lock` and `mig unlock`
 - [ ] implement `mig ls`
 - [ ] implement `mig status`
 - [ ] implement `mig runup`

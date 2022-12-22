@@ -27,6 +27,12 @@ func Dispatch(cfg config.MigConfig) {
 	case "init":
 		CommandInit(cfg)
 
+	case "lock":
+		CommandLock(cfg)
+
+	case "unlock":
+		CommandUnlock(cfg)
+
 	default:
 		fmt.Println("unsupported")
 		os.Exit(10)
