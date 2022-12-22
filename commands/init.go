@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 )
@@ -27,8 +29,11 @@ func CommandInit(cfg config.MigConfig) error {
 	_, err := db.Exec(INIT)
 
 	if err != nil {
+		fmt.Println("error initializing mig!", err)
 		return err
 	}
+
+	fmt.Println("successfully initialized mig.")
 
 	return nil
 }
