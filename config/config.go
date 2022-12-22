@@ -2,11 +2,6 @@ package config
 
 import "errors"
 
-// priority:
-// CLI Flags
-// Env Vars
-// File Config
-
 const (
 	DEF_MIG_DIR = "./migrations"
 )
