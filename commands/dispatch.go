@@ -3,11 +3,13 @@ package commands
 import (
 	"fmt"
 	"os"
+
+	"github.com/tlhunter/mig/config"
 )
 
 // TODO: switch to flag.NewFlagSet
 
-func Dispatch() {
+func Dispatch(cfg config.MigConfig) {
 	if len(os.Args) == 1 {
 		fmt.Println("usage: mig <command>")
 		os.Exit(9)
@@ -21,6 +23,10 @@ func Dispatch() {
 		}
 		fmt.Println("usage: mig create '<migration name>'")
 		os.Exit(10)
+
+	case "init":
+		CommandInit(cfg)
+
 	default:
 		fmt.Println("unsupported")
 		os.Exit(10)

@@ -17,6 +17,8 @@ CREATE TABLE foo (
 DROP TABLE foo;
 --END MIGRATION DOWN--`
 
+// TODO: Allow custom template file path in config
+
 func CommandCreate(rawName string) error {
 	name := strings.ToLower(rawName)
 	name = strings.Replace(name, " ", "_", -1)
