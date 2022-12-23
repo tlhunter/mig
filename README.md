@@ -22,7 +22,7 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 - [X] implement `mig create`
 - [X] implement `mig init`
 - [X] implement `mig lock` and `mig unlock`
-- [ ] implement `mig ls`
+- [ ] implement `mig list`
 - [ ] implement `mig status`
 - [ ] implement `mig runup` and `mig rundown`
 - [ ] implement `mig runto` and `mig rundownto`
@@ -77,7 +77,7 @@ MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig init
 mig init
 
 # list all migrations
-mig ls
+mig list # or mig ls
 
 # check health of migrations, look for bugs, list unexecuted migrations
 mig status

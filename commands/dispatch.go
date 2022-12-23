@@ -33,6 +33,11 @@ func Dispatch(cfg config.MigConfig) {
 	case "unlock":
 		CommandUnlock(cfg)
 
+	case "list":
+		fallthrough
+	case "ls":
+		CommandList(cfg)
+
 	default:
 		fmt.Println("unsupported")
 		os.Exit(10)

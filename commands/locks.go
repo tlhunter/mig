@@ -14,7 +14,6 @@ const (
 
 func CommandLock(cfg config.MigConfig) error {
 	db := database.Connect(cfg.Connection)
-
 	defer db.Close()
 
 	var was_locked int
