@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/tlhunter/mig/commands"
@@ -16,7 +15,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("cfg: %v\n", cfg)
+	// fmt.Printf("cfg: %v\n", cfg)
 
 	commands.Dispatch(cfg)
 

@@ -28,7 +28,7 @@ func CommandCreate(cfg config.MigConfig, rawName string) error {
 
 	// TODO: Lots of cleanup, basically anything not [a-z]
 
-	filename := fmt.Sprintf("%04d%02d%02d%02d%02d%02d-%s.sql",
+	filename := fmt.Sprintf("%04d%02d%02d%02d%02d%02d_%s.sql",
 		now.Year(), now.Month(), now.Day(),
 		now.Hour(), now.Minute(), now.Second(),
 		name)

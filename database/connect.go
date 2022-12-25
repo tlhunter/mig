@@ -16,7 +16,7 @@ func Connect(connection string) *sql.DB {
 		os.Exit(2)
 	}
 
-	fmt.Printf("parsed: %v\n", parsed)
+	// fmt.Printf("parsed: %v\n", parsed)
 
 	db, err := sql.Open("postgres", parsed)
 
