@@ -4,6 +4,8 @@ import "github.com/tlhunter/mig/config"
 
 func CommandStatus(cfg config.MigConfig) error {
 
+	// Attempt to connect to database
+	//   If unable, print connection details (no password) and where config comes from, HALT
 	// Check if migration and lock tables exist
 	//   If missing, recommend `mig init`, HALT
 	//   If one is present and one missing, warn, recommend deleting, HALT
