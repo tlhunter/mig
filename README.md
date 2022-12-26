@@ -32,7 +32,7 @@
 
 ## What is a Migration Runner?
 
-A migration runner allows a developer to mutate a database schema in such a way that the mutations may be checked into a code repository. This is convenient because databaes mutations can be checked in alongside of code changes. It allows, say, SQL schema changes to be audited and visible and close to application code.
+A migration runner allows a developer to mutate a database schema in such a way that the mutations may be checked into a code repository. This is convenient because database mutations can be checked in alongside of code changes. It allows, say, SQL schema changes to be audited and visible and close to application code.
 
 Not only can a database mutate forward, but it's also important to allow migrations to be undone. For this reason there are usually two separate sets or queries that get executed. One for the up/forward, and another for the down/back/rollback.
 
