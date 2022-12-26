@@ -1,15 +1,6 @@
 # `mig`
 
-Platform agnostic binary for running database migrations.
-
-
-## Backstory
-
-I'm predominantly a Node.js developer. One package that I really like using is Knex, which is a Query Builder for Node.js. It's also a migration runner that exposes a nice pattern. It always bothered me that Knex was two things in one, namely a hard application dependency for the query builder aspect, while also being an optional dev dependency for executing migrations. It further bothered me when a project I was working on was tightly coupled to version X of the package for running thousands of migrations, and therefor making it exceedingly difficult to upgrade to version Y of the package for newer query builder capabilities.
-
-I've worked on non-Node.js applications as well. Various projects seem to have their own migration runners. With Ruby and Python projects I would sometimes find myself writing Ruby or Python code in order to work with migration runners. Different projects end up having different migration runners and I would be forced to learn new patterns, many of them unoptimal. When things fail there's usually a stack trace for a language I don't care about. Running migrations requires that the right interpreter version is installed. Because of these reasons I've always wanted a generic, platform-agnostic, pre-compiled binary for running databaes migrations.
-
-`mig` aims to be that tool.
+`mig` is a platform agnostic binary for running database migrations. The goal is to have a universal migration runner, one that is useful for projects written in any language. Gone are the days of learning a new technology when switching to a project written in Python or Node.js or Ruby. No longer sift through stack traces or install dependencies for languages that you don't usually work with. Simply download a binary and write SQL queries.
 
 
 ## v0.1 Progress
@@ -83,7 +74,7 @@ mig list # or mig ls
 # check health of migrations, look for bugs, list unexecuted migrations
 mig status
 
-# create a migration named YYYYMMDDHHmmss-add_users_table.sql
+# create a migration named YYYYMMDDHHmmss_add_users_table.sql
 mig create "Add users table"
 
 # run the next single migration, if it exists
@@ -94,13 +85,13 @@ mig all
 
 # run migrations up to and including the migration of this name
 # if the named migration doesn't exist or isn't unexecuted then do nothing
-mig upto YYYYMMDDHHmmss-add_users_table
+mig upto YYYYMMDDHHmmss_add_users_table
 
 # rolls back a single migration, prompting user to confirm, unless --force is provided
 mig down --force
 
 # rolls back migrations until the named migration is met, prompting user to confirm, unless --force is provided
-mig downto YYYYMMDDHHmmss-add_users_table --force
+mig downto YYYYMMDDHHmmss_add_users_table --force
 
 # forcefully set / unset the lock, useful for fixing error scenarios
 mig lock
@@ -140,9 +131,9 @@ In modern application development developers write code in parallel and check-in
 Here are examples of migration filenames:
 
 ```
-20221211093700-create_users.sql
-20221214121500-create_projects.sql
-20221217234100-link_users_to_projects.sql
+20221211093700_create_users.sql
+20221214121500_create_projects.sql
+20221217234100_link_users_to_projects.sql
 ```
 
 When modifying a database schema we can think of it as evolving the database. This evolution can be referred to as going "up". However, sometimes we'll create a migration that ends in disaster. When that happens we'll need to reverse this operation, referred to as going "down". For that reason a given migration file is made up of a pair of migrations: one up migration and one down migration.
