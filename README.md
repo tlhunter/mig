@@ -22,7 +22,7 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 - [X] implement `mig create`
 - [X] implement `mig init`
 - [X] implement `mig lock` and `mig unlock`
-- [ ] implement `mig list`
+- [X] implement `mig list`
 - [ ] implement `mig status`
 - [ ] implement `mig runup` and `mig rundown`
 - [ ] implement `mig runto` and `mig rundownto`
