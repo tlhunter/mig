@@ -24,8 +24,9 @@ I've worked on non-Node.js applications as well. Various projects seem to have t
 - [X] implement `mig lock` and `mig unlock`
 - [X] implement `mig list`
 - [ ] implement `mig status`
-- [ ] implement `mig runup` and `mig rundown`
-- [ ] implement `mig runto` and `mig rundownto`
+- [ ] implement `mig up` and `mig down`
+- [ ] implement `mig upto` and `mig downto`
+- [ ] implement `mig all`
 
 ## v1.0 Progress
 
@@ -86,20 +87,20 @@ mig status
 mig create "Add users table"
 
 # run the next single migration, if it exists
-mig runup
+mig up
 
 # run all of the unexecuted migrations, if any exist
-mig runall
+mig all
 
 # run migrations up to and including the migration of this name
 # if the named migration doesn't exist or isn't unexecuted then do nothing
-mig runto YYYYMMDDHHmmss-add_users_table
+mig upto YYYYMMDDHHmmss-add_users_table
 
 # rolls back a single migration, prompting user to confirm, unless --force is provided
-mig rundown --force
+mig down --force
 
 # rolls back migrations until the named migration is met, prompting user to confirm, unless --force is provided
-mig rundownto YYYYMMDDHHmmss-add_users_table --force
+mig downto YYYYMMDDHHmmss-add_users_table --force
 
 # forcefully set / unset the lock, useful for fixing error scenarios
 mig lock

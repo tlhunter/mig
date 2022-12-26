@@ -38,6 +38,9 @@ func Dispatch(cfg config.MigConfig) {
 	case "ls":
 		CommandList(cfg)
 
+	case "status":
+		CommandStatus(cfg)
+
 	default:
 		fmt.Println("unsupported")
 		os.Exit(10)
