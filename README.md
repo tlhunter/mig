@@ -141,7 +141,7 @@ Here are examples of migration filenames:
 
 When modifying a database schema we can think of it as evolving the database. This evolution can be referred to as going "up". However, sometimes we'll create a migration that ends in disaster. When that happens we'll need to reverse this operation, referred to as going "down". For that reason a given migration file is made up of a pair of migrations: one up migration and one down migration.
 
-> _Note that generally a "down" migration is a destructive operation. Running them should only happen to recover from disaster. In fact, many teams that use databaes migrations only create "up" migrations._
+> _Note that generally a "down" migration is a destructive operation. Running them should only happen to recover from disaster. In fact, many teams that use database migrations only create "up" migrations._
 
 These schema evolutions are represented as SQL queries. Often times they can be represented as a single query but in practice it's very common to require multiple queries. Sometimes a given up migration just can't be represented with a down migration, so we allow a migration to be empty as well. For this reason we say that a migration is made up of zero or more queries.
 
