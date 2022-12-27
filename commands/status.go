@@ -3,9 +3,11 @@ package commands
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
+	"github.com/tlhunter/mig/migrations"
 )
 
 const EXIST_MIGRATIONS = `SELECT EXISTS (
@@ -168,14 +170,43 @@ func CommandStatus(cfg config.MigConfig) error {
 		os.Stderr.WriteString("If migrations remain locked then someone will want to investigate the failed migration.\n")
 		os.Stderr.WriteString("Once that's over you can unlock migrations by running the following:\n")
 		os.Stderr.WriteString("$ mig unlock\n")
+		os.Stderr.WriteString("\n")
 		// Note: Don't need to return at this point
 	}
 
-	// Check migrations on disk and migrations that have executed
 	// Display the name of the last run migration
-	// Display count of executed and unexecuted migrations
-	//   If there is a skipped migration, display error, HALT
-	// Display the name of the next-to-run migration, and mention `mig up` will run it
+
+	status, err := migrations.GetStatus(cfg, db, false)
+
+	if err != nil {
+		os.Stderr.WriteString("unable to determine migration status!\n")
+		os.Stderr.WriteString(err.Error() + "\n")
+		return err
+	}
+
+	if status.Last.Name != "" {
+		fmt.Printf("Last Migration: %s (id=%d,batch=%d) on %s\n", status.Last.Name, status.Last.Id, status.Last.Batch, status.Last.Time.Format(time.RFC3339))
+		fmt.Println()
+	}
+
+	fmt.Printf("Applied: %d, Unapplied: %d, Skipped: %d, Missing: %d\n", status.Applied, status.Unapplied, status.Skipped, status.Missing)
+	fmt.Println()
+
+	if status.Skipped > 0 {
+		os.Stderr.WriteString("There are at least one skipped migrations! Mig will not be able to run migrations until this is fixed.\n")
+		os.Stderr.WriteString("A skipped migration happens when a local migration file is older than the most recently run migration.\n")
+		os.Stderr.WriteString("To fix this, rename any skipped migrations so that their timestamps are newer.\n")
+		os.Stderr.WriteString("Run this command to list skipped migrations:\n")
+		os.Stderr.WriteString("$ mig list\n")
+		return nil
+	}
+
+	if status.Next != "" {
+		fmt.Printf("Next Migration: %s\n", status.Next)
+		os.Stderr.WriteString("To run this migration, execute the following command:\n")
+		os.Stderr.WriteString("$ mig up\n")
+		fmt.Println()
+	}
 
 	return nil
 }

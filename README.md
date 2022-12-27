@@ -14,7 +14,7 @@
 - [X] implement `mig init`
 - [X] implement `mig lock` and `mig unlock`
 - [X] implement `mig list`
-- [ ] implement `mig status`
+- [X] implement `mig status`
 - [ ] implement `mig up` and `mig down`
 - [ ] implement `mig upto` and `mig downto`
 - [ ] implement `mig all`
