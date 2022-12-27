@@ -18,6 +18,7 @@
 - [ ] implement `mig up` and `mig down`
 - [ ] implement `mig upto` and `mig downto`
 - [ ] implement `mig all`
+- [ ] [automatic release binaries](https://github.com/marketplace/actions/go-release-binaries)
 
 ## v1.0 Progress
 
@@ -25,9 +26,11 @@
 - [ ] unit test everything
 - [ ] syntax for disabling migration transactions
 - [ ] allow specifying path to config file via `--file`
+- [ ] support JSON output via `--json`
 - [ ] add support for mysql
 - [ ] add support for sqlite
 - [ ] write guides for migrating from other tools to `mig`
+- [ ] make `mig create` templates for common scenarios like renaming columns
 
 
 ## What is a Migration Runner?

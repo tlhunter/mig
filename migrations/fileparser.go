@@ -79,7 +79,7 @@ func GetQueriesFromFile(filename string) (MigrationPair, error) {
 			} else if state == STATE_DOWN {
 				pair.Down += line + "\n"
 			}
-			// ignoring content if it's outside of the delimiters
+			// ignore content outside of delimiters
 		}
 	}
 
