@@ -12,7 +12,8 @@ type BatchAndId struct {
 	Id    int
 }
 
-func RecordMigration(db *sql.DB, migration string) error {
+// up
+func AddMigration(db *sql.DB, migration string) error {
 	Highest, err := GetHighestValues(db)
 
 	if err != nil {
@@ -28,8 +29,17 @@ func RecordMigration(db *sql.DB, migration string) error {
 	return nil
 }
 
-func RecordMigrations(db *sql.DB, migrations []string) error {
+// upto, all
+func AddMigrations(db *sql.DB, migrations []string) error {
 	// TODO: multiple inserts with different IDs and shared Batch
+
+	return nil
+}
+
+// down
+func RemoveMigration(db *sql.DB, migration string) error {
+	// Ensure that the provided migration is the final migration
+	// If it's not then fail
 
 	return nil
 }

@@ -67,7 +67,7 @@ func CommandUp(cfg config.MigConfig) error {
 
 	fmt.Printf("Migration %s was successfully applied!\n", next)
 
-	err = migrations.RecordMigration(db, next)
+	err = migrations.AddMigration(db, next)
 
 	if err != nil {
 		os.Stderr.WriteString("The migration query executed but unable to track it in the migrations table!\n")

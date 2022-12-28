@@ -17,7 +17,7 @@
 - [X] implement `mig status`
 - [X] implement `mig up`
 - [ ] implement `mig down`
-- [ ] implement `mig upto` and `mig downto`
+- [ ] implement `mig upto`
 - [ ] implement `mig all`
 - [ ] [automatic release builds](https://github.com/marketplace/actions/go-release-binaries)
 
@@ -84,18 +84,15 @@ mig create "Add users table"
 # run the next single migration, if it exists
 mig up
 
-# run all of the unexecuted migrations, if any exist
-mig all
-
 # run migrations up to and including the migration of this name
 # if the named migration doesn't exist or isn't unexecuted then do nothing
 mig upto YYYYMMDDHHmmss_add_users_table
 
+# run all of the unexecuted migrations, if any exist
+mig all
+
 # rolls back a single migration, prompting user to confirm, unless --force is provided
 mig down --force
-
-# rolls back migrations until the named migration is met, prompting user to confirm, unless --force is provided
-mig downto YYYYMMDDHHmmss_add_users_table --force
 
 # forcefully set / unset the lock, useful for fixing error scenarios
 mig lock

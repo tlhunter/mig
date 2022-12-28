@@ -44,6 +44,9 @@ func Dispatch(cfg config.MigConfig) {
 	case "up":
 		CommandUp(cfg)
 
+	case "down":
+		CommandUp(cfg)
+
 	default:
 		fmt.Println("unsupported")
 		os.Exit(10)
