@@ -15,7 +15,8 @@
 - [X] implement `mig lock` and `mig unlock`
 - [X] implement `mig list`
 - [X] implement `mig status`
-- [ ] implement `mig up` and `mig down`
+- [X] implement `mig up`
+- [ ] implement `mig down`
 - [ ] implement `mig upto` and `mig downto`
 - [ ] implement `mig all`
 - [ ] [automatic release builds](https://github.com/marketplace/actions/go-release-binaries)
