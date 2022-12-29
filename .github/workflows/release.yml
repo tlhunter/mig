@@ -4,7 +4,7 @@ on:
 
 jobs:
   releases-matrix:
-    name: Release Go Binary
+    name: Compile Release Binaries
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,3 +24,4 @@ jobs:
         goarch: ${{ matrix.goarch }}
         goversion: "1.19"
         binary_name: "mig"
+        md5sum: false

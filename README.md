@@ -3,27 +3,9 @@
 `mig` is a platform agnostic binary for running database migrations. The goal is to have a universal migration runner, one that is useful for projects written in any language. Gone are the days of learning a new technology when switching to a project written in Python or Node.js or Ruby. No longer sift through stack traces or install dependencies for languages that you don't usually work with. Simply download a binary and write SQL queries.
 
 
-## v0.1 Progress
-
-- [X] parse env vars
-- [X] parse CLI flags
-- [X] parse config files
-- [X] connect to PG database
-- [X] decide on a migration file format
-- [X] implement `mig create`
-- [X] implement `mig init`
-- [X] implement `mig lock` and `mig unlock`
-- [X] implement `mig list`
-- [X] implement `mig status`
-- [X] implement `mig up`
-- [X] implement `mig down`
-- [X] implement `mig all`
-- [ ] [automatic release builds](https://github.com/marketplace/actions/go-release-binaries)
-
 ## v1.0 Progress
 
 - [ ] implement `mig upto`
-- [X] syntax for disabling migration transactions
 - [ ] address all of the TODOs
 - [ ] unit test everything
 - [ ] allow specifying path to config file via `--file`
