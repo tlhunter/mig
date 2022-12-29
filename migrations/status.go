@@ -2,9 +2,9 @@ package migrations
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 )
 
@@ -16,17 +16,6 @@ type MigrationStatus struct {
 	Applied   int
 	Unapplied int
 }
-
-const (
-	colorReset  = "\033[0m"
-	colorRed    = "\033[31m"
-	colorGreen  = "\033[32m"
-	colorYellow = "\033[33m"
-	colorBlue   = "\033[34m"
-	colorPurple = "\033[35m"
-	colorCyan   = "\033[36m"
-	colorWhite  = "\033[37m"
-)
 
 // TODO: This shouldn't print anything at all but should instead return an array of migration data
 // Printing and color constants should be in the CommandList function
@@ -47,7 +36,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 	}
 
 	if print {
-		fmt.Printf("%5s %-48s %5s %-20s %-20s\n", "ID", "Migration", "Batch", "Time of Run", "Note")
+		color.White("%5s %-48s %5s %-20s %-20s\n", "ID", "Migration", "Batch", "Time of Run", "Note")
 	}
 
 	mfi := 0
@@ -70,9 +59,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 			// This migration is present both on disk and in the database
 			status.Last = migRow
 			if print {
-				fmt.Print(colorGreen)
-				fmt.Printf("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Applied")
-				fmt.Print(colorReset)
+				color.Green("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Applied")
 			}
 			mfi++
 			mri++
@@ -80,9 +67,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 		} else if migFile < migRow.Name {
 			// This migration is present on disk but not in database and is ready to run
 			if print {
-				fmt.Print(colorRed)
-				fmt.Printf("%5s %-48s %5s %20s %-20s\n", "", migFile, "", "", "Migration Skipped!")
-				fmt.Print(colorReset)
+				color.Red("%5s %-48s %5s %20s %-20s\n", "", migFile, "", "", "Migration Skipped!")
 			}
 			mfi++
 			status.Skipped++
@@ -94,9 +79,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 		} else if migFile > migRow.Name {
 			// This migration is missing on disk which is a pretty weird scenario
 			if print {
-				fmt.Print(colorYellow)
-				fmt.Printf("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Missing File!")
-				fmt.Print(colorReset)
+				color.Yellow("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Missing File!")
 			}
 			mri++
 			status.Missing++
@@ -110,9 +93,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 			migRow := migRows[i]
 			status.Last = migRow
 			if print {
-				fmt.Print(colorGreen)
-				fmt.Printf("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Applied")
-				fmt.Print(colorReset)
+				color.Green("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Applied")
 			}
 			status.Applied++
 		}
@@ -127,9 +108,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 				didFindNext = true
 			}
 			if print {
-				fmt.Print(colorCyan)
-				fmt.Printf("%5s %-48s %5s %20s %-20s\n", "", migFile, "", "", "Ready to Run")
-				fmt.Print(colorReset)
+				color.Cyan("%5s %-48s %5s %20s %-20s\n", "", migFile, "", "", "Ready to Run")
 			}
 			status.Unapplied++
 		}

@@ -3,20 +3,10 @@ package commands
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 	"github.com/tlhunter/mig/migrations"
-)
-
-const (
-	colorReset  = "\033[0m"
-	colorRed    = "\033[31m"
-	colorGreen  = "\033[32m"
-	colorYellow = "\033[33m"
-	colorBlue   = "\033[34m"
-	colorPurple = "\033[35m"
-	colorCyan   = "\033[36m"
-	colorWhite  = "\033[37m"
 )
 
 func CommandList(cfg config.MigConfig) error {
@@ -34,18 +24,14 @@ func CommandList(cfg config.MigConfig) error {
 	}
 
 	if status.Skipped > 0 {
-		fmt.Print(colorRed)
-		fmt.Println("* A skipped migration was encountered. If editing locally you may need to rename the file to the current time.")
-		fmt.Print(colorReset)
+		color.Red("* A skipped migration was encountered. If editing locally you may need to rename the file to the current time.")
 	}
 
 	if status.Missing > 0 {
-		fmt.Print(colorYellow)
-		fmt.Println("* A missing migration was encountered. You might need to pull changes from repo.")
-		fmt.Print(colorReset)
+		color.Yellow("* A missing migration was encountered. You might need to pull changes from repo.")
 	}
 
-	fmt.Printf("Applied: %d, Unapplied: %d, Skipped: %d, Missing: %d", status.Applied, status.Unapplied, status.Skipped, status.Missing)
+	color.HiWhite("Applied: %d, Unapplied: %d, Skipped: %d, Missing: %d", status.Applied, status.Unapplied, status.Skipped, status.Missing)
 
 	return nil
 }

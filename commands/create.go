@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 )
 
@@ -33,8 +34,6 @@ func CommandCreate(cfg config.MigConfig, rawName string) error {
 		now.Hour(), now.Minute(), now.Second(),
 		name)
 
-	fmt.Println("MIG", cfg.Migrations)
-
 	filePath := cfg.Migrations + "/" + filename
 
 	file, err := os.Create(filePath)
@@ -49,8 +48,7 @@ func CommandCreate(cfg config.MigConfig, rawName string) error {
 		return err
 	}
 
-	fmt.Println("created migration: " + filePath)
+	color.Green("created migration: " + filePath)
 
 	return nil
-	// TODO: Write file
 }

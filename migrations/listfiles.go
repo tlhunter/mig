@@ -1,7 +1,6 @@
 package migrations
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )
@@ -12,7 +11,6 @@ func ListFiles(directory string) ([]string, error) {
 	files, err := os.ReadDir(directory)
 
 	if err != nil {
-		fmt.Println("unable to read migrations direcotry")
 		return migFiles, err
 	}
 

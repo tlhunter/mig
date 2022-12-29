@@ -16,16 +16,16 @@
 - [X] implement `mig list`
 - [X] implement `mig status`
 - [X] implement `mig up`
-- [ ] implement `mig down`
-- [ ] implement `mig upto`
-- [ ] implement `mig all`
+- [X] implement `mig down`
+- [X] implement `mig all`
 - [ ] [automatic release builds](https://github.com/marketplace/actions/go-release-binaries)
 
 ## v1.0 Progress
 
+- [ ] implement `mig upto`
+- [X] syntax for disabling migration transactions
 - [ ] address all of the TODOs
 - [ ] unit test everything
-- [ ] syntax for disabling migration transactions
 - [ ] allow specifying path to config file via `--file`
 - [ ] support JSON output via `--json`
 - [ ] add support for mysql
@@ -161,3 +161,15 @@ DROP TABLE user;
 ```
 
 A migration file must contain one up migration block and one down migration block, and in that order. Any content outside of these two blocks is ignored. The queries that make up a block are executed in order and queries can span multiple lines. Queries are wrapped in an implicit transaction since we don't want a migration to only be executed partially.
+
+The implicit wrapping of a transaction can be disabled by using a slightly different block syntax:
+
+```sql
+--BEGIN MIGRATION UP NO TRANSACTION--
+CREATE TABLE accounts;
+--END MIGRATION UP--
+
+--BEGIN MIGRATION DOWN NO TRANSACTION--
+DROP TABLE accounts;
+--END MIGRATION DOWN--
+```

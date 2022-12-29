@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 	"github.com/tlhunter/mig/migrations"
@@ -22,24 +22,29 @@ func CommandUp(cfg config.MigConfig) error {
 	status, err := migrations.GetStatus(cfg, db, false)
 
 	if err != nil {
-		os.Stderr.WriteString("Encountered an error trying to get migrations status!\n")
+		color.Red("Encountered an error trying to get migrations status!\n")
 		os.Stderr.WriteString(err.Error() + "\n")
 		return err
 	}
 
 	if status.Skipped > 0 {
-		os.Stderr.WriteString("Refusing to run with skipped migrations! Run `mig status` for details.\n")
+		color.Red("Refusing to run with skipped migrations! Run `mig status` for details.\n")
 		return nil
 	}
 
 	next := status.Next
+
+	if next == "" {
+		color.Red("There are no migrations to run.")
+		return nil
+	}
 
 	filename := cfg.Migrations + "/" + next
 
 	queries, err := migrations.GetQueriesFromFile(filename)
 
 	if err != nil {
-		os.Stderr.WriteString("Error attempting to read next migration file!\n")
+		color.Red("Error attempting to read next migration file!\n")
 		os.Stderr.WriteString(err.Error() + "\n")
 		return err
 	}
@@ -47,31 +52,39 @@ func CommandUp(cfg config.MigConfig) error {
 	locked, err := database.ObtainLock(db)
 
 	if err != nil {
-		os.Stderr.WriteString("Error obtaining lock for migration!\n")
+		color.Red("Error obtaining lock for migration!\n")
 		os.Stderr.WriteString(err.Error() + "\n")
 		return err
 	}
 
 	if !locked {
-		os.Stderr.WriteString("Unable to obtain lock for migration!\n")
+		color.Red("Unable to obtain lock for migration!\n")
 		return nil
 	}
 
-	_, err = db.Exec(BEGIN + queries.Up + END)
+	var query string
+
+	if queries.UpTx {
+		query = BEGIN + queries.Up + END
+	} else {
+		query = queries.Up
+	}
+
+	_, err = db.Exec(query)
 
 	if err != nil {
-		os.Stderr.WriteString("Encountered an error while running migration!\n")
+		color.Red("Encountered an error while running migration!\n")
 		os.Stderr.WriteString(err.Error() + "\n")
 		return err
 	}
 
-	fmt.Printf("Migration %s was successfully applied!\n", next)
+	color.Green("Migration %s was successfully applied!\n", next)
 
 	err = migrations.AddMigration(db, next)
 
 	if err != nil {
-		os.Stderr.WriteString("The migration query executed but unable to track it in the migrations table!\n")
-		os.Stderr.WriteString("You may want to manually add it and investigate the error.\n")
+		color.Red("The migration query executed but unable to track it in the migrations table!\n")
+		color.White("You may want to manually add it and investigate the error.\n")
 		os.Stderr.WriteString(err.Error() + "\n")
 		return err
 	}
@@ -79,13 +92,13 @@ func CommandUp(cfg config.MigConfig) error {
 	released, err := database.ReleaseLock(db)
 
 	if err != nil {
-		os.Stderr.WriteString("Error obtaining lock for migration!\n")
+		color.Red("Error obtaining lock for migration!\n")
 		os.Stderr.WriteString(err.Error() + "\n")
 		return err
 	}
 
 	if !released {
-		os.Stderr.WriteString("Unable to obtain lock for migration!\n")
+		color.Red("Unable to obtain lock for migration!\n")
 		return nil
 	}
 

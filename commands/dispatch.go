@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 )
 
@@ -11,7 +11,7 @@ import (
 
 func Dispatch(cfg config.MigConfig) {
 	if len(os.Args) == 1 {
-		fmt.Println("usage: mig <command>")
+		color.White("usage: mig <command>")
 		os.Exit(9)
 	}
 
@@ -21,7 +21,7 @@ func Dispatch(cfg config.MigConfig) {
 			CommandCreate(cfg, os.Args[2])
 			return
 		}
-		fmt.Println("usage: mig create '<migration name>'")
+		color.White("usage: mig create \"<migration name>\"")
 		os.Exit(10)
 
 	case "init":
@@ -45,10 +45,13 @@ func Dispatch(cfg config.MigConfig) {
 		CommandUp(cfg)
 
 	case "down":
-		CommandUp(cfg)
+		CommandDown(cfg)
+
+	case "all":
+		CommandAll(cfg)
 
 	default:
-		fmt.Println("unsupported")
+		color.White("unsupported command %s", os.Args[1])
 		os.Exit(10)
 	}
 }

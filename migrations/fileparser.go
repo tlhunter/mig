@@ -7,8 +7,10 @@ import (
 )
 
 type MigrationPair struct {
-	Up   string
-	Down string
+	Up     string
+	Down   string
+	UpTx   bool
+	DownTx bool
 }
 
 const (
@@ -18,20 +20,25 @@ const (
 	STATE_DOWN   = 3 // capture Down queries
 	STATE_FINISH = 4 // ignore content
 
-	DELIM_BEGIN_UP   = "--BEGIN MIGRATION UP--"
-	DELIM_END_UP     = "--END MIGRATION UP--"
-	DELIM_BEGIN_DOWN = "--BEGIN MIGRATION DOWN--"
-	DELIM_END_DOWN   = "--END MIGRATION DOWN--"
+	DELIM_BEGIN_UP         = "--BEGIN MIGRATION UP--"
+	DELIM_BEGIN_UP_NO_TX   = "--BEGIN MIGRATION UP NO TRANSACTION--"
+	DELIM_END_UP           = "--END MIGRATION UP--"
+	DELIM_BEGIN_DOWN       = "--BEGIN MIGRATION DOWN--"
+	DELIM_BEGIN_DOWN_NO_TX = "--BEGIN MIGRATION DOWN NO TRANSACTION--"
+	DELIM_END_DOWN         = "--END MIGRATION DOWN--"
 )
 
 // Opens a migration file then steps through it looking for an up and down block.
 // Queries within the two blocks are then returned.
 // Lines that fall outside of the blocks are ignored.
 // If it doesn't find a well formed up them down block an error is returned.
+// This is because any poorly-formed comments should not be mis-interpreted.
 func GetQueriesFromFile(filename string) (MigrationPair, error) {
 	pair := MigrationPair{
-		Up:   "",
-		Down: "",
+		Up:     "",
+		Down:   "",
+		UpTx:   true,
+		DownTx: true,
 	}
 
 	state := STATE_START
@@ -53,6 +60,14 @@ func GetQueriesFromFile(filename string) (MigrationPair, error) {
 			if state != STATE_START {
 				return pair, errors.New("invalid begin up delimiter")
 			}
+			pair.UpTx = true
+			state = STATE_UP
+
+		case DELIM_BEGIN_UP_NO_TX:
+			if state != STATE_START {
+				return pair, errors.New("invalid begin up no transaction delimiter")
+			}
+			pair.UpTx = false
 			state = STATE_UP
 
 		case DELIM_END_UP:
@@ -65,6 +80,14 @@ func GetQueriesFromFile(filename string) (MigrationPair, error) {
 			if state != STATE_MIDDLE {
 				return pair, errors.New("invalid begin down delimiter")
 			}
+			pair.DownTx = true
+			state = STATE_DOWN
+
+		case DELIM_BEGIN_DOWN_NO_TX:
+			if state != STATE_MIDDLE {
+				return pair, errors.New("invalid begin down no transaction delimiter")
+			}
+			pair.DownTx = false
 			state = STATE_DOWN
 
 		case DELIM_END_DOWN:

@@ -1,8 +1,7 @@
 package commands
 
 import (
-	"fmt"
-
+	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 )
@@ -20,16 +19,16 @@ func CommandLock(cfg config.MigConfig) error {
 	err := db.QueryRow(LOCK).Scan(&was_locked)
 
 	if err != nil {
-		fmt.Println("unable to lock!", err)
+		color.Red("mig: unable to lock!", err)
 		return err
 	}
 
 	if was_locked == 0 {
-		fmt.Println("successfully locked.")
+		color.Green("mig: successfully locked.")
 		return nil
 	}
 
-	fmt.Println("already locked!")
+	color.Yellow("mig: already locked!")
 
 	return nil
 }
@@ -43,16 +42,16 @@ func CommandUnlock(cfg config.MigConfig) error {
 	err := db.QueryRow(UNLOCK).Scan(&was_locked)
 
 	if err != nil {
-		fmt.Println("unable to unlock!", err)
+		color.Red("mig: unable to unlock!", err)
 		return err
 	}
 
 	if was_locked == 1 {
-		fmt.Println("successfully unlocked.")
+		color.Green("mig: successfully unlocked.")
 		return nil
 	}
 
-	fmt.Println("already unlocked!")
+	color.Yellow("mig: already unlocked!")
 
 	return nil
 }
