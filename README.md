@@ -73,6 +73,9 @@ MIG_MIGRATIONS="./db" mig
 # create the necessary migration tables
 mig init
 
+# get version information
+mig version
+
 # list all migrations
 mig list
 
@@ -157,3 +160,14 @@ DROP TABLE accounts;
 ```
 
 Transactions should only be disabled when a situation calls for it, like when using `CREATE INDEX CONCURRENTLY`. When in doubt, leave transactions enabled.
+
+
+## Development
+
+Checkout the project then run the following commands to install dependencies, build, and run the program:
+
+```sh
+go get
+make
+./mig version
+```

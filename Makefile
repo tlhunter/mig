@@ -1,10 +1,8 @@
 MIG_VERSION = $(shell cat version.txt)
+BUILD_TIME = $(shell date +"%Y-%m-%dT%H:%M:%S%z")
 
 # Strip debug info
-GO_FLAGS += "-ldflags=-s -w"
-
-# Avoid embedding the build path in the executable for more reproducible builds
-GO_FLAGS += -trimpath
+GO_FLAGS += "-ldflags=-s -w -X 'github.com/tlhunter/mig/commands.Version=$(MIG_VERSION)' -X 'github.com/tlhunter/mig/commands.BuildTime=$(BUILD_TIME)'"
 
 build:
 	go build $(GO_FLAGS) -o mig

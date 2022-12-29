@@ -17,6 +17,10 @@ jobs:
             goos: windows
     steps:
     - uses: actions/checkout@v3
+    - name: Set BUILD_TIME
+      run: echo BUILD_TIME=$(date +"%Y-%m-%dT%H:%M:%S%z") >> ${GITHUB_ENV}
+    - name: Set MIG_VERSION
+      run: echo MIG_VERSION=$(cat version.txt) >> ${GITHUB_ENV}
     - uses: wangyoucao577/go-release-action@v1.34
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -25,3 +29,4 @@ jobs:
         goversion: "1.19"
         binary_name: "mig"
         md5sum: false
+        ldflags: -s -w -X "github.com/tlhunter/mig/commands.Version=${{ env.MIG_VERSION }}" -X "github.com/tlhunter/mig/commands.BuildTime=${{ env.BUILD_TIME }}"

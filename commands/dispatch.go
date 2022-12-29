@@ -50,6 +50,9 @@ func Dispatch(cfg config.MigConfig) {
 	case "all":
 		CommandAll(cfg)
 
+	case "version":
+		CommandVersion(cfg)
+
 	default:
 		color.White("unsupported command %s", os.Args[1])
 		os.Exit(10)
