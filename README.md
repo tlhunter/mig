@@ -2,6 +2,8 @@
 
 `mig` is a database migration runner that is distributed as precompiled binaries. The goal is to have a universal migration runner, one that is useful for projects written in any language. Gone are the days of learning a new technology when switching to a project written in Python or Node.js or Ruby. No longer sift through stack traces or install dependencies for languages that you don't usually work with. Simply download a binary and write SQL queries.
 
+![mig list screenshot](./docs/screenshot-mig-list.png)
+
 
 ## v1.0 Progress
 
