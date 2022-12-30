@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,14 +21,12 @@ CREATE TABLE foo (
 DROP TABLE foo;
 --END MIGRATION DOWN--`
 
-// TODO: Allow custom template file path in config
+var unsafes = regexp.MustCompile(`[^a-z-_]`)
+var repeaters = regexp.MustCompile(`_+`)
 
-func CommandCreate(cfg config.MigConfig, rawName string) error {
-	name := strings.ToLower(rawName)
-	name = strings.Replace(name, " ", "_", -1)
+func CommandCreate(cfg config.MigConfig, name string) error {
+	name = SanitizeName(name)
 	now := time.Now()
-
-	// TODO: Lots of cleanup, basically anything not [a-z]
 
 	filename := fmt.Sprintf("%04d%02d%02d%02d%02d%02d_%s.sql",
 		now.Year(), now.Month(), now.Day(),
@@ -51,4 +50,13 @@ func CommandCreate(cfg config.MigConfig, rawName string) error {
 	color.Green("created migration: " + filePath)
 
 	return nil
+}
+
+func SanitizeName(name string) string {
+	name = strings.ToLower(name)
+	name = strings.ReplaceAll(name, " ", "_")
+	name = unsafes.ReplaceAllString(name, "")
+	name = repeaters.ReplaceAllString(name, "_")
+
+	return name
 }
