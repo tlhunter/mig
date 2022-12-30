@@ -18,6 +18,7 @@
 - [ ] add support for sqlite
 - [ ] write guides for migrating from other tools to `mig`
 - [ ] make `mig create` templates for common scenarios like renaming columns
+- [ ] allow developers to create their own template files
 
 
 ## What is a Migration Runner?
