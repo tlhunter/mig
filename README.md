@@ -9,13 +9,13 @@
 
 `mig` is not currently ready for production. The authors will signal their confidence by setting the project version to 1.0. The following high level features remain before this happens:
 
+- [X] allow specifying path to config file via `--file`
 - [ ] implement `mig upto`
 - [ ] address all of the TODOs
 - [ ] unit test everything
-- [ ] allow specifying path to config file via `--file`
-- [ ] support JSON output via `--json`
 - [ ] add support for mysql
 - [ ] add support for sqlite
+- [ ] support JSON output via `--json`
 - [ ] write guides for migrating from other tools to `mig`
 - [ ] make `mig create` templates for common scenarios like renaming columns
 - [ ] allow developers to create their own template files
@@ -32,18 +32,9 @@ Not only can a database mutate forward, but it's also important to allow migrati
 
 Configuration is be achieved by environment variables, CLI flags, or even a config file. The config file resembles a `.env` file with simple `KEY=value` pairs. While optional, `mig` looks in the current directory and traverses upwards until it finds a config file.
 
-Configuration priority follows this order:
+Configuration defined via CLI flags take the highest priority. After that are values in environment variables, and the configuration file has the lowest priority.
 
-- CLI Flags
-- Environment Vars
-- Config File
-
-Configuration contains at least the following data:
-
-* Connection string
-* Migrations directory
-
-The variable names used in the `.migrc` file are named exactly the same as the environment variables.
+The variable names used in the `.migrc` file are named exactly the same as the environment variables. What follows is a list of the various configuration options.
 
 ### Credentials
 
@@ -54,7 +45,11 @@ mig --credentials="protocol://user:pass@host:port/dbname"
 MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
 ```
 
-Currently, `mig` only supports a protocol of `postgresql`. In the future it will support more. `mig` will load the proper driver depending on the protocol.
+Currently, `mig` only supports a protocol of `postgresql`. In the future it will support more. `mig` will load the proper driver depending on the protocol. To disable TLS verification add the `?sslmode=disable` option. Here's an example of how you might connect to a local database:
+
+```sh
+mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?sslmode=disable"
+```
 
 ### Migrations Directory
 
@@ -63,6 +58,15 @@ The migrations directory defaults to a folder named `migrations` in the current 
 ```sh
 mig --migrations="./db"
 MIG_MIGRATIONS="./db" mig
+```
+
+### Configuration File Path
+
+Unlike the other settings this one can only be set via CLI flag. To use it, specify a path to a `.migrc` file by using the `--flag` argument. This is useful for defining separate environments.
+
+```sh
+mig status --file="prod.migrc"
+mig --file="local.migrc" down
 ```
 
 
@@ -84,6 +88,7 @@ mig list
 mig status
 
 # create a migration named YYYYMMDDHHmmss_add_users_table.sql
+mig create add_users_table
 mig create "Add users table"
 
 # run the next single migration
@@ -95,8 +100,8 @@ mig upto YYYYMMDDHHmmss_add_users_table
 # run all of the unexecuted migrations
 mig all
 
-# rolls back a single migration, prompting user to confirm, unless --force is provided
-mig down --force
+# rolls back a single migration
+mig down
 
 # forcefully set / unset the lock, useful for fixing error scenarios
 mig lock

@@ -58,7 +58,6 @@ func RemoveMigration(db *sql.DB, migration string, id int) error {
 	var lastId int
 	var lastName string
 
-	// TODO: These two queries could be combined into one. Not a huge deal due to lock
 	err := db.QueryRow(ULTIMATE).Scan(&lastId, &lastName)
 
 	if err != nil {

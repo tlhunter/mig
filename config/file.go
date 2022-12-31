@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	MIGRC = ".migrc" // TODO: allow override via --file
+	MIGRC = ".migrc"
 )
 
 // Check the current working directory of the process for a .migrc file.
@@ -16,7 +16,13 @@ const (
 // Existing environment variables are not overwritten in this manner.
 // If a file isn't found in the current directory then check the parent directory.
 // This repeats until reaching the root directory.
-func SetEnvFromConfigFile() error {
+func SetEnvFromConfigFile(migRcPath string) error {
+	if migRcPath != "" {
+		// TODO: The migrations directory should be relative to migRcPath
+		// that way a repo can check-in a file that only contains migrations path
+		return godotenv.Load(migRcPath)
+	}
+
 	dir, err := os.Getwd()
 
 	if err != nil {

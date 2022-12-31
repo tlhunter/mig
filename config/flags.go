@@ -1,19 +1,28 @@
 package config
 
 import (
-	"flag"
+	"os"
+
+	"github.com/DavidGamba/go-getoptions"
 )
 
-func GetConfigFromProcessFlags() (MigConfig, error) {
-	connection := flag.String("connection", "", "SQL connection string")
-	migrations := flag.String("migrations", "", "Migrations directory")
+func GetConfigFromProcessFlags() (MigConfig, []string, error) {
+	opt := getoptions.New()
+	connection := opt.String("connection", "")
+	migrations := opt.String("migrations", "")
+	migRcPath := opt.String("file", "")
 
-	flag.Parse()
+	subcommand, err := opt.Parse(os.Args[1:])
 
 	config := MigConfig{
 		Connection: *connection,
 		Migrations: *migrations,
+		MigRcPath:  *migRcPath,
 	}
 
-	return config, nil
+	if err != nil {
+		return config, subcommand, err
+	}
+
+	return config, subcommand, nil
 }

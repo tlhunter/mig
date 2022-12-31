@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	cfg, err := config.GetConfig()
+	cfg, subcommands, err := config.GetConfig()
 
 	if err != nil {
 		color.Red("unable to parse configuration\n")
@@ -17,5 +17,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	commands.Dispatch(cfg)
+	commands.Dispatch(cfg, subcommands)
 }

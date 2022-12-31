@@ -7,18 +7,16 @@ import (
 	"github.com/tlhunter/mig/config"
 )
 
-// TODO: switch to flag.NewFlagSet
-
-func Dispatch(cfg config.MigConfig) {
-	if len(os.Args) == 1 {
+func Dispatch(cfg config.MigConfig, subcommands []string) {
+	if len(subcommands) == 0 {
 		color.White("usage: mig <command>")
 		os.Exit(9)
 	}
 
-	switch os.Args[1] {
+	switch subcommands[0] {
 	case "create":
-		if len(os.Args) >= 3 {
-			CommandCreate(cfg, os.Args[2])
+		if len(subcommands) >= 2 {
+			CommandCreate(cfg, subcommands[1])
 			return
 		}
 		color.White("usage: mig create \"<migration name>\"")
@@ -54,7 +52,7 @@ func Dispatch(cfg config.MigConfig) {
 		CommandVersion(cfg)
 
 	default:
-		color.White("unsupported command %s", os.Args[1])
+		color.White("unsupported command %s", subcommands[0])
 		os.Exit(10)
 	}
 }

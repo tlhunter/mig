@@ -9,18 +9,20 @@ const (
 type MigConfig struct {
 	Connection string // DB connection string
 	Migrations string // migrations directory, e.g. ./migrations
+	MigRcPath  string // override path to config file
 }
 
-func GetConfig() (MigConfig, error) {
+func GetConfig() (MigConfig, []string, error) {
 	config := MigConfig{}
 
-	err := SetEnvFromConfigFile() // reads .env and sets env vars but does not override
+	flagConfig, subcommands, _ := GetConfigFromProcessFlags()
+
+	err := SetEnvFromConfigFile(flagConfig.MigRcPath) // reads .env and sets env vars but does not override
 
 	if err != nil {
-		return config, err
+		return config, []string{}, err
 	}
 
-	flagConfig, _ := GetConfigFromProcessFlags()
 	envConfig, _ := GetConfigFromEnvVars()
 
 	if flagConfig.Connection != "" {
@@ -28,7 +30,7 @@ func GetConfig() (MigConfig, error) {
 	} else if envConfig.Connection != "" {
 		config.Connection = envConfig.Connection
 	} else {
-		return config, errors.New("unable to determinte server connection")
+		return config, subcommands, errors.New("unable to determinte server connection")
 	}
 
 	if flagConfig.Migrations != "" {
@@ -36,8 +38,8 @@ func GetConfig() (MigConfig, error) {
 	} else if envConfig.Migrations != "" {
 		config.Migrations = envConfig.Migrations
 	} else {
-		config.Migrations = DEF_MIG_DIR // TODO: combine with CWD for absolute path
+		config.Migrations = DEF_MIG_DIR
 	}
 
-	return config, nil
+	return config, subcommands, nil
 }
