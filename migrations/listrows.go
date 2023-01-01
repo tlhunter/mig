@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// TODO: QueryBox, refactor 'db' everywhere to be a struct holding db and dbType
 const LIST = `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`
 
 type MigrationRow struct {

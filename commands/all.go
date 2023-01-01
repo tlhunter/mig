@@ -34,7 +34,7 @@ func CommandAll(cfg config.MigConfig) error {
 		return nil
 	}
 
-	locked, err := database.ObtainLock(db)
+	locked, err := database.ObtainLock(db, dbType)
 
 	if err != nil {
 		color.Red("Error obtaining lock for running migrations!\n")
@@ -47,7 +47,7 @@ func CommandAll(cfg config.MigConfig) error {
 		return nil
 	}
 
-	highest, err := migrations.GetHighestValues(db)
+	highest, err := migrations.GetHighestValues(db, dbType)
 	batchId := highest.Batch
 
 	color.HiWhite("Running migrations for batch %d...", batchId)
@@ -89,7 +89,7 @@ func CommandAll(cfg config.MigConfig) error {
 
 		color.Green("Migration %s was successfully applied!\n", next)
 
-		err = migrations.AddMigrationWithBatch(db, next, batchId)
+		err = migrations.AddMigrationWithBatch(db, next, batchId, dbType)
 
 		if err != nil {
 			color.Red("The migration query executed but unable to track it in the migrations table!\n")
@@ -100,7 +100,7 @@ func CommandAll(cfg config.MigConfig) error {
 		}
 	}
 
-	released, err := database.ReleaseLock(db)
+	released, err := database.ReleaseLock(db, dbType)
 
 	if err != nil {
 		color.Red("Error releasing lock for migration!\n")

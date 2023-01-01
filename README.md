@@ -13,6 +13,7 @@
 
 - [ ] implement `mig upto`
 - [ ] address all of the TODOs
+- [ ] document all exit status codes
 - [ ] unit test everything
 - [ ] add support for sqlite
 - [ ] support JSON output via `--json`

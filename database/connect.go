@@ -16,6 +16,7 @@ func Connect(connection string) (*sql.DB, string) {
 	u, err := url.Parse(connection)
 
 	// TODO: ?tls=verify|insecure|disable
+	// defaults to disable
 
 	dbType := u.Scheme
 
@@ -58,7 +59,7 @@ func Connect(connection string) (*sql.DB, string) {
 		}
 
 		// multiStatements=true required to run multiple queries in a single call, basically all migrations
-		mysqlConnString := fmt.Sprintf("%s@tcp(%s:%s)%s?tls=%s&multiStatements=true", u.User, u.Host, port, u.Path, "skip-verify")
+		mysqlConnString := fmt.Sprintf("%s@tcp(%s:%s)%s?tls=%s&multiStatements=true&parseTime=true", u.User, u.Host, port, u.Path, "skip-verify")
 
 		db, err = sql.Open("mysql", mysqlConnString)
 
@@ -76,7 +77,7 @@ func Connect(connection string) (*sql.DB, string) {
 			os.Exit(4)
 		}
 	} else {
-		color.Red("mig doesn't support the database scheme %s", u.Scheme)
+		color.Red("mig doesn't support the '%s' database", u.Scheme)
 		os.Exit(5)
 	}
 

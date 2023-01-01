@@ -1,0 +1,10 @@
+--BEGIN MIGRATION UP--
+CREATE TABLE users (
+  id serial NOT NULL PRIMARY KEY,
+  username varchar(24) UNIQUE
+);
+INSERT INTO users SET username = 'tlhunter';
+--END MIGRATION UP--
+--BEGIN MIGRATION DOWN--
+DROP TABLE users;
+--END MIGRATION DOWN--

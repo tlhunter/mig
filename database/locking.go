@@ -2,15 +2,19 @@ package database
 
 import "database/sql"
 
-const (
-	OBTAIN  = `UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 AND is_locked = 0;`
-	RELEASE = `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 AND is_locked = 1;`
+var (
+	OBTAIN = QueryBox{
+		Postgres: `UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 AND is_locked = 0;`,
+		Mysql:    `UPDATE migrations_lock SET is_locked = 1 WHERE ` + "`index`" + ` = 1 AND is_locked = 0;`,
+	}
+	RELEASE = QueryBox{
+		Postgres: `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 AND is_locked = 1;`,
+		Mysql:    `UPDATE migrations_lock SET is_locked = 0 WHERE ` + "`index`" + ` = 1 AND is_locked = 1;`,
+	}
 )
 
-// TODO: use dbType to determine query
-
-func ObtainLock(db *sql.DB) (bool, error) {
-	result, err := db.Exec(OBTAIN)
+func ObtainLock(db *sql.DB, dbType string) (bool, error) {
+	result, err := db.Exec(OBTAIN.For(dbType))
 
 	if err != nil {
 		return false, err
@@ -25,8 +29,8 @@ func ObtainLock(db *sql.DB) (bool, error) {
 	return affected == 1, nil
 }
 
-func ReleaseLock(db *sql.DB) (bool, error) {
-	result, err := db.Exec(RELEASE)
+func ReleaseLock(db *sql.DB, dbType string) (bool, error) {
+	result, err := db.Exec(RELEASE.For(dbType))
 
 	if err != nil {
 		return false, err

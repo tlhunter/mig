@@ -36,7 +36,7 @@ func CommandDown(cfg config.MigConfig) error {
 		return err
 	}
 
-	locked, err := database.ObtainLock(db)
+	locked, err := database.ObtainLock(db, dbType)
 
 	if err != nil {
 		color.Red("Error obtaining lock for migrating down!\n")
@@ -67,7 +67,7 @@ func CommandDown(cfg config.MigConfig) error {
 
 	color.Green("Migration down %s was successfully applied!\n", last.Name)
 
-	err = migrations.RemoveMigration(db, last.Name, last.Id)
+	err = migrations.RemoveMigration(db, last.Name, last.Id, dbType)
 
 	if err != nil {
 		color.Red("The migration down query executed but unable to track it in the migrations table!\n")
@@ -76,7 +76,7 @@ func CommandDown(cfg config.MigConfig) error {
 		return err
 	}
 
-	released, err := database.ReleaseLock(db)
+	released, err := database.ReleaseLock(db, dbType)
 
 	if err != nil {
 		color.Red("Error obtaining lock for down migration!\n")

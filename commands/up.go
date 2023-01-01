@@ -55,7 +55,7 @@ func CommandUp(cfg config.MigConfig) error {
 		return err
 	}
 
-	locked, err := database.ObtainLock(db)
+	locked, err := database.ObtainLock(db, dbType)
 
 	if err != nil {
 		color.Red("Error obtaining lock for migration!\n")
@@ -86,7 +86,7 @@ func CommandUp(cfg config.MigConfig) error {
 
 	color.Green("Migration %s was successfully applied!\n", next)
 
-	err = migrations.AddMigration(db, next)
+	err = migrations.AddMigration(db, next, dbType)
 
 	if err != nil {
 		color.Red("The migration query executed but unable to track it in the migrations table!\n")
@@ -95,7 +95,7 @@ func CommandUp(cfg config.MigConfig) error {
 		return err
 	}
 
-	released, err := database.ReleaseLock(db)
+	released, err := database.ReleaseLock(db, dbType)
 
 	if err != nil {
 		color.Red("Error obtaining lock for migration!\n")

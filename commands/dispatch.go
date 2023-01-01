@@ -10,7 +10,7 @@ import (
 func Dispatch(cfg config.MigConfig, subcommands []string) {
 	if len(subcommands) == 0 {
 		color.White("usage: mig <command>")
-		os.Exit(9)
+		os.Exit(10)
 	}
 
 	switch subcommands[0] {
