@@ -9,13 +9,19 @@ import (
 	"github.com/tlhunter/mig/migrations"
 )
 
-const (
-	BEGIN = "BEGIN TRANSACTION;\n"
-	END   = "COMMIT TRANSACTION;\n"
+var (
+	BEGIN = database.QueryBox{
+		Postgres: "BEGIN TRANSACTION;\n",
+		Mysql:    "START TRANSACTION;\n",
+	}
+	END = database.QueryBox{
+		Postgres: "COMMIT TRANSACTION;\n",
+		Mysql:    "COMMIT;\n",
+	}
 )
 
 func CommandUp(cfg config.MigConfig) error {
-	db := database.Connect(cfg.Connection)
+	db, dbType := database.Connect(cfg.Connection)
 
 	defer db.Close()
 
@@ -65,7 +71,7 @@ func CommandUp(cfg config.MigConfig) error {
 	var query string
 
 	if queries.UpTx {
-		query = BEGIN + queries.Up + END
+		query = BEGIN.For(dbType) + queries.Up + END.For(dbType)
 	} else {
 		query = queries.Up
 	}

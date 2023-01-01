@@ -7,6 +7,8 @@ const (
 	RELEASE = `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 AND is_locked = 1;`
 )
 
+// TODO: use dbType to determine query
+
 func ObtainLock(db *sql.DB) (bool, error) {
 	result, err := db.Exec(OBTAIN)
 

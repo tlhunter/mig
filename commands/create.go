@@ -11,6 +11,7 @@ import (
 	"github.com/tlhunter/mig/config"
 )
 
+// TODO: This is valid Postgres but invalid MySQL. Does it matter all that much?
 const TEMPLATE = `--BEGIN MIGRATION UP--
 CREATE TABLE foo (
   id SERIAL PRIMARY KEY,

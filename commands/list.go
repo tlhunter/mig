@@ -10,7 +10,7 @@ import (
 )
 
 func CommandList(cfg config.MigConfig) error {
-	db := database.Connect(cfg.Connection)
+	db, _ := database.Connect(cfg.Connection)
 	defer db.Close()
 
 	status, err := migrations.GetStatus(cfg, db, true)

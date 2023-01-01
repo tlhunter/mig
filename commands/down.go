@@ -10,7 +10,7 @@ import (
 )
 
 func CommandDown(cfg config.MigConfig) error {
-	db := database.Connect(cfg.Connection)
+	db, dbType := database.Connect(cfg.Connection)
 
 	defer db.Close()
 
@@ -52,7 +52,7 @@ func CommandDown(cfg config.MigConfig) error {
 	var query string
 
 	if queries.DownTx {
-		query = BEGIN + queries.Down + END
+		query = BEGIN.For(dbType) + queries.Down + END.For(dbType)
 	} else {
 		query = queries.Down
 	}

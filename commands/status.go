@@ -11,23 +11,30 @@ import (
 	"github.com/tlhunter/mig/migrations"
 )
 
-const EXIST_MIGRATIONS = `SELECT EXISTS (
+var EXIST_MIGRATIONS = database.QueryBox{
+	Postgres: `SELECT EXISTS (
 SELECT FROM
 	pg_tables
 WHERE
 	schemaname = 'public' AND
 	tablename  = 'migrations'
-) AS table_exists;`
+) AS table_exists;`,
+	Mysql: `CALL sys.table_exists(DATABASE(), 'migrations', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+}
 
-const EXIST_LOCK = `SELECT EXISTS (
+var EXIST_LOCK = database.QueryBox{
+	Postgres: `SELECT EXISTS (
 	SELECT FROM
 		pg_tables
 	WHERE
 		schemaname = 'public' AND
 		tablename  = 'migrations_lock'
-	) AS table_exists;`
+	) AS table_exists;`,
+	Mysql: `CALL sys.table_exists(DATABASE(), 'migrations_lock', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+}
 
-const DESCRIBE = `SELECT
+var DESCRIBE = database.QueryBox{
+	Postgres: `SELECT
 	table_name,
 	column_name,
 	data_type
@@ -36,22 +43,29 @@ FROM
 WHERE
 	table_name = 'migrations' OR table_name = 'migrations_lock'
 ORDER BY
-	table_name, column_name;`
+	table_name, column_name;`,
+	Mysql: `DESC migrations;`,
+}
 
-const LOCK_STATUS = `SELECT is_locked FROM migrations_lock WHERE INDEX = 1;`
+var LOCK_STATUS = database.QueryBox{
+	Postgres: `SELECT is_locked FROM migrations_lock WHERE index = 1;`,
+	Mysql:    `SELECT is_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;`,
+}
 
-// Provide a narrative to the user about the current status of mig. Inspired by `git status` and `brew doctor`.
+// Provide a narrative to the user about the current status of mig
+// Inspired by `git status` and `brew doctor`
 func CommandStatus(cfg config.MigConfig) error {
 
 	// Attempt to connect to database
 
-	db := database.Connect(cfg.Connection)
+	db, dbType := database.Connect(cfg.Connection)
+	// TODO: use dbType to choose queries
 
 	// Check if migration tables exist
 
 	existMigrations := false
 
-	err := db.QueryRow(EXIST_MIGRATIONS).Scan(&existMigrations)
+	err := db.QueryRow(EXIST_MIGRATIONS.For(dbType)).Scan(&existMigrations)
 
 	if err != nil {
 		color.Red("unable to tell if 'migrations' table exists!")
@@ -61,7 +75,7 @@ func CommandStatus(cfg config.MigConfig) error {
 
 	existLock := false
 
-	err = db.QueryRow(EXIST_LOCK).Scan(&existLock)
+	err = db.QueryRow(EXIST_LOCK.For(dbType)).Scan(&existLock)
 
 	if err != nil {
 		color.Red("unable to tell if 'migrations_lock' table exists!\n")
@@ -99,65 +113,70 @@ func CommandStatus(cfg config.MigConfig) error {
 		return nil
 	}
 
-	rows, err := db.Query(DESCRIBE)
+	if dbType == "mysql" {
+		// The following gnarly comparison checks need to be rebuilt first
+		color.Yellow("migration table description check is currently unimplemented for mysql.\n")
+	} else {
+		rows, err := db.Query(DESCRIBE.For(dbType))
 
-	if err != nil {
-		color.Red("unable to describe the migration tables!\n")
-		os.Stderr.WriteString(err.Error() + "\n")
-		return err
-	}
+		if err != nil {
+			color.Red("unable to describe the migration tables!\n")
+			os.Stderr.WriteString(err.Error() + "\n")
+			return err
+		}
 
-	// Check if tables have correct columns
+		// Check if tables have correct columns
 
-	var table, column, data string
+		var table, column, data string
 
-	// struggling to find the Go-way to do this...
-	rows.Next()
-	rows.Scan(&table, &column, &data)
-	if table != "migrations" || column != "batch" || data != "integer" {
-		color.Red("expected migrations.batch of type integer\n")
-		return nil
-	}
+		// struggling to find the Go-way to do this...
+		rows.Next()
+		rows.Scan(&table, &column, &data)
+		if table != "migrations" || column != "batch" || data != "integer" {
+			color.Red("expected migrations.batch of type integer\n")
+			return nil
+		}
 
-	rows.Next()
-	rows.Scan(&table, &column, &data)
-	if table != "migrations" || column != "id" || data != "integer" {
-		color.Red("expected migrations.id of type integer\n")
-		return nil
-	}
+		rows.Next()
+		rows.Scan(&table, &column, &data)
+		if table != "migrations" || column != "id" || data != "integer" {
+			color.Red("expected migrations.id of type integer\n")
+			return nil
+		}
 
-	rows.Next()
-	rows.Scan(&table, &column, &data)
-	if table != "migrations" || column != "migration_time" || data != "timestamp with time zone" {
-		color.Red("expected migrations.migration_time of type timestamp with time zone\n")
-		return nil
-	}
+		rows.Next()
+		rows.Scan(&table, &column, &data)
+		if table != "migrations" || column != "migration_time" || data != "timestamp with time zone" {
+			color.Red("expected migrations.migration_time of type timestamp with time zone\n")
+			return nil
+		}
 
-	rows.Next()
-	rows.Scan(&table, &column, &data)
-	if table != "migrations" || column != "name" || data != "character varying" {
-		color.Red("expected migrations.name of type character varying\n")
-		return nil
-	}
+		rows.Next()
+		rows.Scan(&table, &column, &data)
+		if table != "migrations" || column != "name" || data != "character varying" {
+			color.Red("expected migrations.name of type character varying\n")
+			return nil
+		}
 
-	rows.Next()
-	rows.Scan(&table, &column, &data)
-	if table != "migrations_lock" || column != "index" || data != "integer" {
-		color.Red("expected migrations_lock.index of type integer\n")
-		return nil
-	}
+		rows.Next()
+		rows.Scan(&table, &column, &data)
+		if table != "migrations_lock" || column != "index" || data != "integer" {
+			color.Red("expected migrations_lock.index of type integer\n")
+			return nil
+		}
 
-	rows.Next()
-	rows.Scan(&table, &column, &data)
-	if table != "migrations_lock" || column != "is_locked" || data != "integer" {
-		color.Red("expected migrations_lock.is_locked of type integer\n")
-		return nil
+		rows.Next()
+		rows.Scan(&table, &column, &data)
+		if table != "migrations_lock" || column != "is_locked" || data != "integer" {
+			color.Red("expected migrations_lock.is_locked of type integer\n")
+			return nil
+		}
 	}
 
 	// Check if locked
 
 	locked := false
-	err = db.QueryRow(LOCK_STATUS).Scan(&locked)
+	err = db.QueryRow(LOCK_STATUS.For(dbType)).Scan(&locked)
 
 	if err != nil {
 		color.Red("unable to determine lock status!\n")

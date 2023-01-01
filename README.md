@@ -4,16 +4,16 @@
 
 ![mig list screenshot](./docs/screenshot-mig-list.png)
 
+`mig` currently supports **PostgreSQL** and **MySQL** with plans to add more.
 
-## v1.0 Progress
 
-`mig` is not currently ready for production. The authors will signal their confidence by setting the project version to 1.0. The following high level features remain before this happens:
+## v1.0 TODOs
 
-- [X] allow specifying path to config file via `--file`
+`mig` isn't yet ready for production. When it is `mig` will hit version 1.0. Some of the required tasks to reach this include:
+
 - [ ] implement `mig upto`
 - [ ] address all of the TODOs
 - [ ] unit test everything
-- [ ] add support for mysql
 - [ ] add support for sqlite
 - [ ] support JSON output via `--json`
 - [ ] write guides for migrating from other tools to `mig`
@@ -45,10 +45,11 @@ mig --credentials="protocol://user:pass@host:port/dbname"
 MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
 ```
 
-Currently, `mig` only supports a protocol of `postgresql`. In the future it will support more. `mig` will load the proper driver depending on the protocol. To disable TLS verification add the `?sslmode=disable` option. Here's an example of how you might connect to a local database:
+Currently, `mig` supports protocols of `postgresql` and `mysql`. In the future it will support more. Internally `mig` load the proper driver depending on the protocol. To disable TLS verification add the `?sslmode=disable` option. Here's an example of how you might connect to a local database:
 
 ```sh
 mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?sslmode=disable"
+mig --credentials="mysql://user:hunter2@localhost:3306/dbname?tls=skip-verify"
 ```
 
 ### Migrations Directory
@@ -176,4 +177,13 @@ Checkout the project then run the following commands to install dependencies, bu
 go get
 make
 ./mig version
+```
+
+### Testing
+
+The following commands let you easily spin up databases within Docker for testing:
+
+```sh
+docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=hunter2 -d postgres
+docker run --name some-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=hunter2 -e MYSQL_DATABASE=mig -d mysql
 ```

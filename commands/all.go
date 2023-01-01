@@ -11,7 +11,7 @@ import (
 )
 
 func CommandAll(cfg config.MigConfig) error {
-	db := database.Connect(cfg.Connection)
+	db, dbType := database.Connect(cfg.Connection)
 
 	defer db.Close()
 
@@ -74,7 +74,7 @@ func CommandAll(cfg config.MigConfig) error {
 		var query string
 
 		if queries.UpTx {
-			query = BEGIN + queries.Up + END
+			query = BEGIN.For(dbType) + queries.Up + END.For(dbType)
 		} else {
 			query = queries.Up
 		}

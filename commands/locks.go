@@ -6,17 +6,29 @@ import (
 	"github.com/tlhunter/mig/database"
 )
 
-const (
-	LOCK   = `UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 RETURNING ( SELECT is_locked AS was_locked FROM migrations_lock WHERE index = 1);`
-	UNLOCK = `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 RETURNING ( SELECT is_locked AS was_locked FROM migrations_lock WHERE index = 1);`
+var (
+	LOCK = database.QueryBox{
+		Postgres: `UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 RETURNING ( SELECT is_locked AS was_locked FROM migrations_lock WHERE index = 1);`,
+		Mysql: `START TRANSACTION;
+	SELECT is_locked AS was_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;
+	UPDATE migrations_lock SET is_locked = 1 WHERE ` + "`index`" + ` = 1;
+COMMIT;`,
+	}
+	UNLOCK = database.QueryBox{
+		Postgres: `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 RETURNING ( SELECT is_locked AS was_locked FROM migrations_lock WHERE index = 1);`,
+		Mysql: `START TRANSACTION;
+	SELECT is_locked AS was_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;
+	UPDATE migrations_lock SET is_locked = 0 WHERE ` + "`index`" + ` = 1;
+COMMIT;`,
+	}
 )
 
 func CommandLock(cfg config.MigConfig) error {
-	db := database.Connect(cfg.Connection)
+	db, dbType := database.Connect(cfg.Connection)
 	defer db.Close()
 
 	var was_locked int
-	err := db.QueryRow(LOCK).Scan(&was_locked)
+	err := db.QueryRow(LOCK.For(dbType)).Scan(&was_locked)
 
 	if err != nil {
 		color.Red("mig: unable to lock!", err)
@@ -34,12 +46,11 @@ func CommandLock(cfg config.MigConfig) error {
 }
 
 func CommandUnlock(cfg config.MigConfig) error {
-	db := database.Connect(cfg.Connection)
-
+	db, dbType := database.Connect(cfg.Connection)
 	defer db.Close()
 
 	var was_locked int
-	err := db.QueryRow(UNLOCK).Scan(&was_locked)
+	err := db.QueryRow(UNLOCK.For(dbType)).Scan(&was_locked)
 
 	if err != nil {
 		color.Red("mig: unable to unlock!", err)
