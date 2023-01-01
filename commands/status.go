@@ -59,7 +59,6 @@ func CommandStatus(cfg config.MigConfig) error {
 	// Attempt to connect to database
 
 	db, dbType := database.Connect(cfg.Connection)
-	// TODO: use dbType to choose queries
 
 	// Check if migration tables exist
 
