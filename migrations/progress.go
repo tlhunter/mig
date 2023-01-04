@@ -1,7 +1,6 @@
 package migrations
 
 import (
-	"database/sql"
 	"errors"
 
 	"github.com/tlhunter/mig/database"
@@ -36,14 +35,14 @@ type BatchAndId struct {
 }
 
 // up
-func AddMigration(db *sql.DB, migration string, dbType string) error {
-	Highest, err := GetHighestValues(db, dbType)
+func AddMigration(dbox database.DbBox, migration string) error {
+	Highest, err := GetHighestValues(dbox)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(ADD.For(dbType), Highest.Id, migration, Highest.Batch)
+	_, err = dbox.Exec(ADD, Highest.Id, migration, Highest.Batch)
 
 	if err != nil {
 		return err
@@ -53,14 +52,14 @@ func AddMigration(db *sql.DB, migration string, dbType string) error {
 }
 
 // upto, all
-func AddMigrationWithBatch(db *sql.DB, migration string, group int, dbType string) error {
-	Highest, err := GetHighestValues(db, dbType)
+func AddMigrationWithBatch(dbox database.DbBox, migration string, group int) error {
+	Highest, err := GetHighestValues(dbox)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(ADD.For(dbType), Highest.Id, migration, group)
+	_, err = dbox.Exec(ADD, Highest.Id, migration, group)
 
 	if err != nil {
 		return err
@@ -70,13 +69,13 @@ func AddMigrationWithBatch(db *sql.DB, migration string, group int, dbType strin
 }
 
 // down
-func RemoveMigration(db *sql.DB, migration string, id int, dbType string) error {
+func RemoveMigration(dbox database.DbBox, migration string, id int) error {
 	// Ensure that the provided migration is the final migration
 	// If it's not then fail
 	var lastId int
 	var lastName string
 
-	err := db.QueryRow(ULTIMATE.For(dbType)).Scan(&lastId, &lastName)
+	err := dbox.QueryRow(ULTIMATE).Scan(&lastId, &lastName)
 
 	if err != nil {
 		return err
@@ -86,7 +85,7 @@ func RemoveMigration(db *sql.DB, migration string, id int, dbType string) error 
 		return errors.New("Tried to delete the non-final migration")
 	}
 
-	result, err := db.Exec(DELETE.For(dbType), id, migration)
+	result, err := dbox.Exec(DELETE, id, migration)
 
 	affected, err := result.RowsAffected()
 
@@ -101,12 +100,12 @@ func RemoveMigration(db *sql.DB, migration string, id int, dbType string) error 
 	return nil
 }
 
-func GetHighestValues(db *sql.DB, dbType string) (BatchAndId, error) {
+func GetHighestValues(dbox database.DbBox) (BatchAndId, error) {
 	var Highest BatchAndId
 
 	var count int
 
-	err := db.QueryRow(COUNT.For(dbType)).Scan(&count)
+	err := dbox.QueryRow(COUNT).Scan(&count)
 
 	if err != nil {
 		return Highest, err
@@ -120,7 +119,7 @@ func GetHighestValues(db *sql.DB, dbType string) (BatchAndId, error) {
 		return Highest, nil
 	}
 
-	err = db.QueryRow(HIGHEST.For(dbType)).Scan(&Highest.Batch, &Highest.Id)
+	err = dbox.QueryRow(HIGHEST).Scan(&Highest.Batch, &Highest.Id)
 
 	if err != nil {
 		return Highest, err

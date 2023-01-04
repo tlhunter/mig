@@ -21,11 +21,11 @@ var (
 )
 
 func CommandUp(cfg config.MigConfig) error {
-	db, dbType := database.Connect(cfg.Connection)
+	dbox := database.Connect(cfg.Connection)
 
-	defer db.Close()
+	defer dbox.Db.Close()
 
-	status, err := migrations.GetStatus(cfg, db, false)
+	status, err := migrations.GetStatus(cfg, dbox, false)
 
 	if err != nil {
 		color.Red("Encountered an error trying to get migrations status!\n")
@@ -55,7 +55,7 @@ func CommandUp(cfg config.MigConfig) error {
 		return err
 	}
 
-	locked, err := database.ObtainLock(db, dbType)
+	locked, err := database.ObtainLock(dbox)
 
 	if err != nil {
 		color.Red("Error obtaining lock for migration!\n")
@@ -71,12 +71,12 @@ func CommandUp(cfg config.MigConfig) error {
 	var query string
 
 	if queries.UpTx {
-		query = BEGIN.For(dbType) + queries.Up + END.For(dbType)
+		query = BEGIN.For(dbox.Type) + queries.Up + END.For(dbox.Type)
 	} else {
 		query = queries.Up
 	}
 
-	_, err = db.Exec(query)
+	_, err = dbox.Db.Exec(query)
 
 	if err != nil {
 		color.Red("Encountered an error while running migration!\n")
@@ -86,7 +86,7 @@ func CommandUp(cfg config.MigConfig) error {
 
 	color.Green("Migration %s was successfully applied!\n", next)
 
-	err = migrations.AddMigration(db, next, dbType)
+	err = migrations.AddMigration(dbox, next)
 
 	if err != nil {
 		color.Red("The migration query executed but unable to track it in the migrations table!\n")
@@ -95,7 +95,7 @@ func CommandUp(cfg config.MigConfig) error {
 		return err
 	}
 
-	released, err := database.ReleaseLock(db, dbType)
+	released, err := database.ReleaseLock(dbox)
 
 	if err != nil {
 		color.Red("Error obtaining lock for migration!\n")

@@ -12,6 +12,27 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type DbBox struct {
+	Db   *sql.DB
+	Type string
+}
+
+func (dbox DbBox) GetQuery(qb QueryBox) string {
+	return qb.For(dbox.Type)
+}
+
+func (dbox DbBox) Exec(qb QueryBox, args ...any) (sql.Result, error) {
+	return dbox.Db.Exec(qb.For(dbox.Type), args...)
+}
+
+func (dbox DbBox) Query(qb QueryBox, args ...any) (*sql.Rows, error) {
+	return dbox.Db.Query(qb.For(dbox.Type), args...)
+}
+
+func (dbox DbBox) QueryRow(qb QueryBox, args ...any) *sql.Row {
+	return dbox.Db.QueryRow(qb.For(dbox.Type), args...)
+}
+
 // mig needs a common TLS flag mapping across all RDBMS
 // Postgres
 //   verify -> verify-full
@@ -22,10 +43,11 @@ import (
 //   insecure -> skip-verify
 //   disable -> false
 
-func Connect(connection string) (*sql.DB, string) {
+func Connect(connection string) DbBox {
+	var dbox DbBox
 	u, err := url.Parse(connection)
 
-	dbType := u.Scheme
+	dbox.Type = u.Scheme
 
 	qs, err := url.ParseQuery(u.RawQuery)
 	tls_in := qs.Get("tls")
@@ -35,8 +57,6 @@ func Connect(connection string) (*sql.DB, string) {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(2)
 	}
-
-	var db *sql.DB
 
 	if u.Scheme == "postgresql" {
 		tls := "disable"
@@ -52,7 +72,7 @@ func Connect(connection string) (*sql.DB, string) {
 			port = u.Port()
 		}
 
-		db, err = sql.Open("postgres", fmt.Sprintf("postgresql://%s@%s:%s%s?sslmode=%s", u.User, u.Hostname(), port, u.Path, tls))
+		dbox.Db, err = sql.Open("postgres", fmt.Sprintf("postgresql://%s@%s:%s%s?sslmode=%s", u.User, u.Hostname(), port, u.Path, tls))
 
 		if err != nil {
 			color.Red("unable to connect to postgresql database!\n")
@@ -60,7 +80,7 @@ func Connect(connection string) (*sql.DB, string) {
 			os.Exit(3)
 		}
 
-		err = db.Ping()
+		err = dbox.Db.Ping()
 
 		if err != nil {
 			color.Red("unable to connect to postgresql database!\n")
@@ -84,7 +104,7 @@ func Connect(connection string) (*sql.DB, string) {
 		// multiStatements=true required to run multiple queries in a single call, basically all migrations
 		mysqlConnString := fmt.Sprintf("%s@tcp(%s:%s)%s?tls=%s&multiStatements=true&parseTime=true", u.User, u.Hostname(), port, u.Path, tls)
 
-		db, err = sql.Open("mysql", mysqlConnString)
+		dbox.Db, err = sql.Open("mysql", mysqlConnString)
 
 		if err != nil {
 			color.Red("unable to connect to mysql database!\n")
@@ -92,7 +112,7 @@ func Connect(connection string) (*sql.DB, string) {
 			os.Exit(3)
 		}
 
-		err := db.Ping()
+		err := dbox.Db.Ping()
 
 		if err != nil {
 			color.Red("unable to connect to mysql database!\n")
@@ -104,5 +124,5 @@ func Connect(connection string) (*sql.DB, string) {
 		os.Exit(5)
 	}
 
-	return db, dbType
+	return dbox
 }

@@ -10,11 +10,11 @@ import (
 )
 
 func CommandDown(cfg config.MigConfig) error {
-	db, dbType := database.Connect(cfg.Connection)
+	dbox := database.Connect(cfg.Connection)
 
-	defer db.Close()
+	defer dbox.Db.Close()
 
-	status, err := migrations.GetStatus(cfg, db, false)
+	status, err := migrations.GetStatus(cfg, dbox, false)
 
 	if err != nil {
 		color.Red("Encountered an error trying to get migrations status!\n")
@@ -36,7 +36,7 @@ func CommandDown(cfg config.MigConfig) error {
 		return err
 	}
 
-	locked, err := database.ObtainLock(db, dbType)
+	locked, err := database.ObtainLock(dbox)
 
 	if err != nil {
 		color.Red("Error obtaining lock for migrating down!\n")
@@ -52,12 +52,12 @@ func CommandDown(cfg config.MigConfig) error {
 	var query string
 
 	if queries.DownTx {
-		query = BEGIN.For(dbType) + queries.Down + END.For(dbType)
+		query = BEGIN.For(dbox.Type) + queries.Down + END.For(dbox.Type)
 	} else {
 		query = queries.Down
 	}
 
-	_, err = db.Exec(query)
+	_, err = dbox.Db.Exec(query)
 
 	if err != nil {
 		color.Red("Encountered an error while running down migration!\n")
@@ -67,7 +67,7 @@ func CommandDown(cfg config.MigConfig) error {
 
 	color.Green("Migration down %s was successfully applied!\n", last.Name)
 
-	err = migrations.RemoveMigration(db, last.Name, last.Id, dbType)
+	err = migrations.RemoveMigration(dbox, last.Name, last.Id)
 
 	if err != nil {
 		color.Red("The migration down query executed but unable to track it in the migrations table!\n")
@@ -76,7 +76,7 @@ func CommandDown(cfg config.MigConfig) error {
 		return err
 	}
 
-	released, err := database.ReleaseLock(db, dbType)
+	released, err := database.ReleaseLock(dbox)
 
 	if err != nil {
 		color.Red("Error obtaining lock for down migration!\n")
