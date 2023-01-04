@@ -37,7 +37,6 @@ INSERT INTO migrations_lock SET ` + "`index`" + ` = 1, is_locked = 0;`,
 
 func CommandInit(cfg config.MigConfig) error {
 	db, dbType := database.Connect(cfg.Connection)
-	// TODO: use dbType to determine query
 
 	defer db.Close()
 

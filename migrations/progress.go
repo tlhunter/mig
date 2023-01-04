@@ -7,7 +7,6 @@ import (
 	"github.com/tlhunter/mig/database"
 )
 
-// TODO: QueryBox
 var (
 	HIGHEST = database.QueryBox{
 		Postgres: `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`,

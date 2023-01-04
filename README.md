@@ -49,9 +49,15 @@ MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
 Currently, `mig` supports protocols of `postgresql` and `mysql` with plans to support more. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database:
 
 ```sh
-mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?sslmode=disable"
-mig --credentials="mysql://user:hunter2@localhost:3306/dbname?tls=skip-verify"
+mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?tls=disable"
+mig --credentials="mysql://user:hunter2@localhost:3306/dbname?tls=disable"
 ```
+
+There are three connection string options for configuring secure databse connections:
+
+* `?tls=verify`: enable secure database connection and verify the certificate
+* `?tls=insecure`: enable secure database connection but don't verify (e.g. `localhost`)
+* `?tls=disable` (default): use an insecure database connection
 
 ### Migrations Directory
 

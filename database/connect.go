@@ -9,16 +9,26 @@ import (
 	"github.com/fatih/color"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
+
+// mig needs a common TLS flag mapping across all RDBMS
+// Postgres
+//   verify -> verify-full
+//   insecure -> require
+//   disable -> disable
+// MySQL
+//   verify -> true
+//   insecure -> skip-verify
+//   disable -> false
 
 func Connect(connection string) (*sql.DB, string) {
 	u, err := url.Parse(connection)
 
-	// TODO: ?tls=verify|insecure|disable
-	// defaults to disable
-
 	dbType := u.Scheme
+
+	qs, err := url.ParseQuery(u.RawQuery)
+	tls_in := qs.Get("tls")
 
 	if err != nil {
 		color.Red("unable to parse connection url!\n")
@@ -29,15 +39,20 @@ func Connect(connection string) (*sql.DB, string) {
 	var db *sql.DB
 
 	if u.Scheme == "postgresql" {
-		parsed, err := pq.ParseURL(connection)
+		tls := "disable"
 
-		if err != nil {
-			color.Red("unable to parse postgresql connection string!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(2)
+		if tls_in == "verify" {
+			tls = "verify-full"
+		} else if tls_in == "insecure" {
+			tls = "require"
 		}
 
-		db, err = sql.Open("postgres", parsed)
+		port := "5432"
+		if u.Port() != "" {
+			port = u.Port()
+		}
+
+		db, err = sql.Open("postgres", fmt.Sprintf("postgresql://%s@%s:%s%s?sslmode=%s", u.User, u.Hostname(), port, u.Path, tls))
 
 		if err != nil {
 			color.Red("unable to connect to postgresql database!\n")
@@ -58,8 +73,16 @@ func Connect(connection string) (*sql.DB, string) {
 			port = u.Port()
 		}
 
+		tls := "false"
+
+		if tls_in == "verify" {
+			tls = "true"
+		} else if tls_in == "insecure" {
+			tls = "skip-verify"
+		}
+
 		// multiStatements=true required to run multiple queries in a single call, basically all migrations
-		mysqlConnString := fmt.Sprintf("%s@tcp(%s:%s)%s?tls=%s&multiStatements=true&parseTime=true", u.User, u.Host, port, u.Path, "skip-verify")
+		mysqlConnString := fmt.Sprintf("%s@tcp(%s:%s)%s?tls=%s&multiStatements=true&parseTime=true", u.User, u.Hostname(), port, u.Path, tls)
 
 		db, err = sql.Open("mysql", mysqlConnString)
 
