@@ -12,7 +12,6 @@
 `mig` isn't yet ready for production. When it is `mig` will hit version 1.0. Some of the required tasks to reach this include:
 
 - [ ] implement `mig upto`
-- [ ] address all of the TODOs
 - [ ] document all exit status codes
 - [ ] unit test everything
 - [ ] add support for sqlite

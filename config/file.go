@@ -18,8 +18,6 @@ const (
 // This repeats until reaching the root directory.
 func SetEnvFromConfigFile(migRcPath string) error {
 	if migRcPath != "" {
-		// TODO: The migrations directory should be relative to migRcPath
-		// that way a repo can check-in a file that only contains migrations path
 		return godotenv.Load(migRcPath)
 	}
 
