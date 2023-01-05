@@ -16,7 +16,7 @@ func CommandAll(cfg config.MigConfig) error {
 	defer dbox.Db.Close()
 
 	// First call to GetStatus is mostly unused. if it fails then don't continue.
-	status, err := migrations.GetStatus(cfg, dbox, false)
+	status, err := migrations.GetStatus(cfg, dbox)
 
 	if err != nil {
 		color.Red("Encountered an error trying to get migrations status!\n")
@@ -53,7 +53,7 @@ func CommandAll(cfg config.MigConfig) error {
 	color.HiWhite("Running migrations for batch %d...", batchId)
 
 	for {
-		status, err := migrations.GetStatus(cfg, dbox, false)
+		status, err := migrations.GetStatus(cfg, dbox)
 
 		next := status.Next
 

@@ -1,9 +1,6 @@
 package migrations
 
 import (
-	"time"
-
-	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 )
@@ -15,12 +12,15 @@ type MigrationStatus struct {
 	Next      string       // the next migration to execute
 	Applied   int
 	Unapplied int
+	History   []MigrationRowStatus
 }
 
-// TODO: This shouldn't print anything at all but should instead return an array of migration data
-// Printing and color constants should be in the CommandList function
+type MigrationRowStatus struct {
+	Migration MigrationRow
+	Status    string
+}
 
-func GetStatus(cfg config.MigConfig, dbox database.DbBox, print bool) (MigrationStatus, error) {
+func GetStatus(cfg config.MigConfig, dbox database.DbBox) (MigrationStatus, error) {
 	var status MigrationStatus
 
 	migFiles, err := ListFiles(cfg.Migrations)
@@ -33,10 +33,6 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox, print bool) (Migration
 
 	if err != nil {
 		return status, err
-	}
-
-	if print {
-		color.White("%5s %-48s %5s %-20s %-20s\n", "ID", "Migration", "Batch", "Time of Run", "Note")
 	}
 
 	mfi := 0
@@ -58,32 +54,37 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox, print bool) (Migration
 		if migFile == migRow.Name {
 			// This migration is present both on disk and in the database
 			status.Last = migRow
-			if print {
-				color.Green("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Applied")
-			}
 			mfi++
 			mri++
 			status.Applied++
+			status.History = append(status.History, MigrationRowStatus{
+				Migration: migRow,
+				Status:    "applied",
+			})
 		} else if migFile < migRow.Name {
 			// This migration is present on disk but not in database and is ready to run
-			if print {
-				color.Red("%5s %-48s %5s %20s %-20s\n", "", migFile, "", "", "Migration Skipped!")
-			}
 			mfi++
 			status.Skipped++
 			status.Unapplied++
+			status.History = append(status.History, MigrationRowStatus{
+				Migration: MigrationRow{
+					Name: migFile,
+				},
+				Status: "skipped",
+			})
 			if !didFindNext {
 				status.Next = migFile
 				didFindNext = true
 			}
 		} else if migFile > migRow.Name {
 			// This migration is missing on disk which is a pretty weird scenario
-			if print {
-				color.Yellow("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Missing File!")
-			}
 			mri++
 			status.Missing++
 			status.Applied++
+			status.History = append(status.History, MigrationRowStatus{
+				Migration: migRow,
+				Status:    "missing",
+			})
 		}
 	}
 
@@ -92,10 +93,11 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox, print bool) (Migration
 		for i := mri; i < len(migRows); i++ {
 			migRow := migRows[i]
 			status.Last = migRow
-			if print {
-				color.Green("%5d %-48s %5d %20s %-20s\n", migRow.Id, migRow.Name, migRow.Batch, migRow.Time.Format(time.RFC3339), "Applied")
-			}
 			status.Applied++
+			status.History = append(status.History, MigrationRowStatus{
+				Migration: migRow,
+				Status:    "applied",
+			})
 		}
 	}
 
@@ -107,10 +109,13 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox, print bool) (Migration
 				status.Next = migFile
 				didFindNext = true
 			}
-			if print {
-				color.Cyan("%5s %-48s %5s %20s %-20s\n", "", migFile, "", "", "Ready to Run")
-			}
 			status.Unapplied++
+			status.History = append(status.History, MigrationRowStatus{
+				Migration: MigrationRow{
+					Name: migFile,
+				},
+				Status: "unapplied",
+			})
 		}
 	}
 

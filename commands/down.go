@@ -14,7 +14,7 @@ func CommandDown(cfg config.MigConfig) error {
 
 	defer dbox.Db.Close()
 
-	status, err := migrations.GetStatus(cfg, dbox, false)
+	status, err := migrations.GetStatus(cfg, dbox)
 
 	if err != nil {
 		color.Red("Encountered an error trying to get migrations status!\n")

@@ -195,7 +195,7 @@ func CommandStatus(cfg config.MigConfig) error {
 
 	// Display the name of the last run migration
 
-	status, err := migrations.GetStatus(cfg, dbox, false)
+	status, err := migrations.GetStatus(cfg, dbox)
 
 	if err != nil {
 		color.Red("unable to determine migration status!")
