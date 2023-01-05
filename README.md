@@ -11,8 +11,7 @@
 
 `mig` isn't yet ready for production. When it is `mig` will hit version 1.0. Some of the required tasks to reach this include:
 
-- [ ] implement `mig upto`
-- [ ] document all exit status codes
+- [ ] document all exit status codes, ensure all errors return non-zero
 - [ ] unit test everything
 - [ ] add support for sqlite
 - [ ] support JSON output via `--json`
@@ -89,13 +88,11 @@ mig --file="local.migrc" down
 | `mig status`        | display health and status information |
 | `mig create <name>` | creates a new migration file |
 | `mig up`            | runs the next single migration |
-| `mig upto <name>` * | runs migrations up to and including `<name>` |
+| `mig upto <name>`   | runs migrations up to and including `<name>` |
 | `mig all`           | runs all pending migrations |
 | `mig down`          | rolls back the last executed migration |
 | `mig unlock`        | unlocks the migration, in case of error |
 | `mig lock`          | locks the migrations |
-
-> `*` The `upto` command is not yet implemented.
 
 ## Tables
 

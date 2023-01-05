@@ -48,6 +48,14 @@ func Dispatch(cfg config.MigConfig, subcommands []string) {
 	case "all":
 		CommandAll(cfg)
 
+	case "upto":
+		if len(subcommands) >= 2 {
+			CommandUpto(cfg, subcommands[1])
+			return
+		}
+		color.White("usage: mig upto \"<migration name>\"")
+		os.Exit(10)
+
 	case "version":
 		CommandVersion(cfg)
 
