@@ -1,12 +1,15 @@
 package migrations
 
 import (
-	"database/sql"
 	"time"
+
+	"github.com/tlhunter/mig/database"
 )
 
-// TODO: QueryBox, refactor 'db' everywhere to be a struct holding db and dbType
-const LIST = `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`
+var LIST = database.QueryBox{
+	Postgres: `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
+	Mysql:    `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
+}
 
 type MigrationRow struct {
 	Id    int
@@ -15,10 +18,10 @@ type MigrationRow struct {
 	Time  time.Time
 }
 
-func ListRows(db *sql.DB) ([]MigrationRow, error) {
+func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
 	var migRows []MigrationRow
 
-	rows, err := db.Query(LIST)
+	rows, err := dbox.Query(LIST)
 
 	if err != nil {
 		return migRows, err

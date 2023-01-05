@@ -1,7 +1,5 @@
 package database
 
-import "database/sql"
-
 var (
 	OBTAIN = QueryBox{
 		Postgres: `UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 AND is_locked = 0;`,
@@ -13,8 +11,8 @@ var (
 	}
 )
 
-func ObtainLock(db *sql.DB, dbType string) (bool, error) {
-	result, err := db.Exec(OBTAIN.For(dbType))
+func ObtainLock(dbox DbBox) (bool, error) {
+	result, err := dbox.Exec(OBTAIN)
 
 	if err != nil {
 		return false, err
@@ -29,8 +27,8 @@ func ObtainLock(db *sql.DB, dbType string) (bool, error) {
 	return affected == 1, nil
 }
 
-func ReleaseLock(db *sql.DB, dbType string) (bool, error) {
-	result, err := db.Exec(RELEASE.For(dbType))
+func ReleaseLock(dbox DbBox) (bool, error) {
+	result, err := dbox.Exec(RELEASE)
 
 	if err != nil {
 		return false, err

@@ -58,13 +58,13 @@ func CommandStatus(cfg config.MigConfig) error {
 
 	// Attempt to connect to database
 
-	db, dbType := database.Connect(cfg.Connection)
+	dbox := database.Connect(cfg.Connection)
 
 	// Check if migration tables exist
 
 	existMigrations := false
 
-	err := db.QueryRow(EXIST_MIGRATIONS.For(dbType)).Scan(&existMigrations)
+	err := dbox.QueryRow(EXIST_MIGRATIONS).Scan(&existMigrations)
 
 	if err != nil {
 		color.Red("unable to tell if 'migrations' table exists!")
@@ -74,7 +74,7 @@ func CommandStatus(cfg config.MigConfig) error {
 
 	existLock := false
 
-	err = db.QueryRow(EXIST_LOCK.For(dbType)).Scan(&existLock)
+	err = dbox.QueryRow(EXIST_LOCK).Scan(&existLock)
 
 	if err != nil {
 		color.Red("unable to tell if 'migrations_lock' table exists!\n")
@@ -112,11 +112,11 @@ func CommandStatus(cfg config.MigConfig) error {
 		return nil
 	}
 
-	if dbType == "mysql" {
+	if dbox.Type == "mysql" {
 		// The following gnarly comparison checks need to be rebuilt first
 		color.Yellow("migration table description check is currently unimplemented for mysql.\n")
 	} else {
-		rows, err := db.Query(DESCRIBE.For(dbType))
+		rows, err := dbox.Query(DESCRIBE)
 
 		if err != nil {
 			color.Red("unable to describe the migration tables!\n")
@@ -175,7 +175,7 @@ func CommandStatus(cfg config.MigConfig) error {
 	// Check if locked
 
 	locked := false
-	err = db.QueryRow(LOCK_STATUS.For(dbType)).Scan(&locked)
+	err = dbox.QueryRow(LOCK_STATUS).Scan(&locked)
 
 	if err != nil {
 		color.Red("unable to determine lock status!\n")
@@ -195,7 +195,7 @@ func CommandStatus(cfg config.MigConfig) error {
 
 	// Display the name of the last run migration
 
-	status, err := migrations.GetStatus(cfg, db, false)
+	status, err := migrations.GetStatus(cfg, dbox, false)
 
 	if err != nil {
 		color.Red("unable to determine migration status!")

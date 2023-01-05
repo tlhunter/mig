@@ -1,11 +1,11 @@
 package migrations
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
+	"github.com/tlhunter/mig/database"
 )
 
 type MigrationStatus struct {
@@ -20,7 +20,7 @@ type MigrationStatus struct {
 // TODO: This shouldn't print anything at all but should instead return an array of migration data
 // Printing and color constants should be in the CommandList function
 
-func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, error) {
+func GetStatus(cfg config.MigConfig, dbox database.DbBox, print bool) (MigrationStatus, error) {
 	var status MigrationStatus
 
 	migFiles, err := ListFiles(cfg.Migrations)
@@ -29,7 +29,7 @@ func GetStatus(cfg config.MigConfig, db *sql.DB, print bool) (MigrationStatus, e
 		return status, err
 	}
 
-	migRows, err := ListRows(db)
+	migRows, err := ListRows(dbox)
 
 	if err != nil {
 		return status, err
