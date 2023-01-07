@@ -26,3 +26,13 @@ publish:
 	git commit -am "version v$(MIG_VERSION)"
 	git tag "v$(MIG_VERSION)"
 	git push origin main "v$(MIG_VERSION)"
+
+test:
+	go test -v ./...
+
+clean:
+	rm mig || true
+	rm mig-linux-amd64 || true
+	rm mig.exe || true
+	rm mig-macos-amd64 || true
+	rm mig-macos-arm64 || true
