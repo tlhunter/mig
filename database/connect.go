@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type DbBox struct {
@@ -106,6 +107,15 @@ func Connect(connection string) (DbBox, error) {
 
 		if err != nil {
 			return dbox, errors.New("unable to connect to mysql database!")
+		}
+	} else if u.Scheme == "sqlite" { // or sqlite3?
+		// TODO: What should the connection URL look like?
+		// sqlite://user:pass@watever/file.db
+		// sqlite://user:pass@watever//tmp/file.db
+		// sqlite3://user:pass@watever/./file.db
+		dbox.Db, err = sql.Open("sqlite3", ":memory:")
+		if err != nil {
+			return dbox, errors.New("unable to connect to sqlite database!")
 		}
 	} else {
 		return dbox, errors.New(fmt.Sprintf("mig doesn't support the '%s' database", u.Scheme))
