@@ -11,7 +11,6 @@
 
 `mig` isn't yet ready for production. When it is `mig` will hit version 1.0. Some of the required tasks to reach this include:
 
-- [ ] document all exit status codes, ensure all errors return non-zero
 - [ ] unit test everything
 - [ ] add support for sqlite
 - [ ] support JSON output via `--json`

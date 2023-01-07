@@ -24,14 +24,19 @@ COMMIT;`,
 )
 
 func CommandLock(cfg config.MigConfig) error {
-	dbox := database.Connect(cfg.Connection)
+	dbox, err := database.Connect(cfg.Connection)
+
+	if err != nil {
+		return err
+	}
+
 	defer dbox.Db.Close()
 
 	var was_locked int
-	err := dbox.QueryRow(LOCK).Scan(&was_locked)
+	err = dbox.QueryRow(LOCK).Scan(&was_locked)
 
 	if err != nil {
-		color.Red("mig: unable to lock!", err)
+		color.Red("mig: unable to lock!")
 		return err
 	}
 
@@ -46,14 +51,19 @@ func CommandLock(cfg config.MigConfig) error {
 }
 
 func CommandUnlock(cfg config.MigConfig) error {
-	dbox := database.Connect(cfg.Connection)
+	dbox, err := database.Connect(cfg.Connection)
+
+	if err != nil {
+		return err
+	}
+
 	defer dbox.Db.Close()
 
 	var was_locked int
-	err := dbox.QueryRow(UNLOCK).Scan(&was_locked)
+	err = dbox.QueryRow(UNLOCK).Scan(&was_locked)
 
 	if err != nil {
-		color.Red("mig: unable to unlock!", err)
+		color.Red("mig: unable to unlock!")
 		return err
 	}
 

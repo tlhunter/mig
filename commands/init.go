@@ -36,14 +36,18 @@ INSERT INTO migrations_lock SET ` + "`index`" + ` = 1, is_locked = 0;`,
 )
 
 func CommandInit(cfg config.MigConfig) error {
-	dbox := database.Connect(cfg.Connection)
+	dbox, err := database.Connect(cfg.Connection)
+
+	if err != nil {
+		return err
+	}
 
 	defer dbox.Db.Close()
 
-	_, err := dbox.Exec(INIT)
+	_, err = dbox.Exec(INIT)
 
 	if err != nil {
-		color.Red("error initializing mig!", err)
+		color.Red("error initializing mig!")
 		return err
 	}
 

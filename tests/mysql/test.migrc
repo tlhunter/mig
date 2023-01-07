@@ -1,2 +1,2 @@
-MIG_CONNECTION="mysql://root:hunter2@localhost/mig?tls=skip-verify"
+MIG_CONNECTION="mysql://root:hunter2@localhost/mig?tls=insecure"
 MIG_MIGRATIONS="."

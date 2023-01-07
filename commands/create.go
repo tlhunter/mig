@@ -37,6 +37,7 @@ func CommandCreate(cfg config.MigConfig, name string) error {
 
 	file, err := os.Create(filePath)
 	if err != nil {
+		color.Red("Unable to create migration file!")
 		return err
 	}
 
@@ -44,6 +45,7 @@ func CommandCreate(cfg config.MigConfig, name string) error {
 
 	_, err = file.WriteString(TEMPLATE)
 	if err != nil {
+		color.Red("Unable to write to migration file!")
 		return err
 	}
 

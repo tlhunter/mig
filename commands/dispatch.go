@@ -1,66 +1,66 @@
 package commands
 
 import (
-	"os"
+	"errors"
+	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 )
 
-func Dispatch(cfg config.MigConfig, subcommands []string) {
+func Dispatch(cfg config.MigConfig, subcommands []string) error {
+	var err error
 	if len(subcommands) == 0 {
-		color.White("usage: mig <command>")
-		os.Exit(10)
+		err = errors.New("usage: mig <command>")
 	}
 
 	switch subcommands[0] {
 	case "create":
 		if len(subcommands) >= 2 {
-			CommandCreate(cfg, subcommands[1])
-			return
+			err = CommandCreate(cfg, subcommands[1])
+		} else {
+			err = errors.New("usage: mig create \"<migration name>\"")
 		}
-		color.White("usage: mig create \"<migration name>\"")
-		os.Exit(10)
 
 	case "init":
-		CommandInit(cfg)
+		err = CommandInit(cfg)
 
 	case "lock":
-		CommandLock(cfg)
+		err = CommandLock(cfg)
 
 	case "unlock":
-		CommandUnlock(cfg)
+		err = CommandUnlock(cfg)
 
 	case "list":
 		fallthrough
 	case "ls":
-		CommandList(cfg)
+		err = CommandList(cfg)
 
 	case "status":
-		CommandStatus(cfg)
+		err = CommandStatus(cfg)
 
 	case "up":
-		CommandUp(cfg)
+		err = CommandUp(cfg)
 
 	case "down":
-		CommandDown(cfg)
+		err = CommandDown(cfg)
 
 	case "all":
-		CommandAll(cfg)
+		err = CommandAll(cfg)
 
 	case "upto":
 		if len(subcommands) >= 2 {
-			CommandUpto(cfg, subcommands[1])
-			return
+			err = CommandUpto(cfg, subcommands[1])
+		} else {
+			err = errors.New("usage: mig upto \"<migration name>\"")
 		}
-		color.White("usage: mig upto \"<migration name>\"")
-		os.Exit(10)
 
 	case "version":
-		CommandVersion(cfg)
+		err = CommandVersion(cfg)
 
 	default:
-		color.White("unsupported command %s", subcommands[0])
-		os.Exit(10)
+		err = errors.New(fmt.Sprintf("unsupported command %s", subcommands[0]))
 	}
+
+	return err
+
 }

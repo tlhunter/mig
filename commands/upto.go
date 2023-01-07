@@ -1,7 +1,8 @@
 package commands
 
 import (
-	"os"
+	"errors"
+	"fmt"
 
 	"github.com/fatih/color"
 
@@ -15,7 +16,11 @@ import (
 //       would be nice to support "TIME_foo" or "foo" if unambiguous
 
 func CommandUpto(cfg config.MigConfig, target string) error {
-	dbox := database.Connect(cfg.Connection)
+	dbox, err := database.Connect(cfg.Connection)
+
+	if err != nil {
+		return err
+	}
 
 	defer dbox.Db.Close()
 
@@ -23,19 +28,16 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 	status, err := migrations.GetStatus(cfg, dbox)
 
 	if err != nil {
-		color.Red("Encountered an error trying to get migrations status!\n")
-		os.Stderr.WriteString(err.Error() + "\n")
+		color.Red("Encountered an error trying to get migrations status!")
 		return err
 	}
 
 	if status.Skipped > 0 {
-		color.Red("Refusing to run with skipped migrations! Run `mig status` for details.\n")
-		return nil
+		return errors.New("Refusing to run with skipped migrations! Run `mig status` for details.")
 	}
 
 	if status.Next == "" {
-		color.Red("There are no migrations to run.")
-		return nil
+		return errors.New("There are no migrations to run.")
 	}
 
 	// ensure that the target is unapplied and ahead of current
@@ -61,21 +63,18 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 	}
 
 	if !targetIsCandidate {
-		color.Red("Unable to find an unexecuted upcoming migration named %s", target)
-		return nil
+		return errors.New(fmt.Sprintf("Unable to find an unexecuted upcoming migration named %s", target))
 	}
 
 	locked, err := database.ObtainLock(dbox)
 
 	if err != nil {
-		color.Red("Error obtaining lock for running migrations!\n")
-		os.Stderr.WriteString(err.Error() + "\n")
+		color.Red("Error obtaining lock for running migrations!")
 		return err
 	}
 
 	if !locked {
-		color.Red("Unable to obtain lock for running migrations!\n")
-		return nil
+		return errors.New("Unable to obtain lock for running migrations!")
 	}
 
 	highest, err := migrations.GetHighestValues(dbox)
@@ -97,8 +96,7 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 		queries, err := migrations.GetQueriesFromFile(filename)
 
 		if err != nil {
-			color.Red("Error attempting to read next migration file!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
+			color.Red("Error attempting to read next migration file!")
 			return err
 		}
 
@@ -113,20 +111,18 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 		_, err = dbox.Db.Exec(query)
 
 		if err != nil {
-			color.Red("Encountered an error while running migration!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
+			color.Red("Encountered an error while running migration!")
 			return err
 		}
 
-		color.Green("Migration %s was successfully applied!\n", next)
+		color.Green("Migration %s was successfully applied!", next)
 
 		err = migrations.AddMigrationWithBatch(dbox, next, batchId)
 
 		if err != nil {
-			color.Red("The migration query executed but unable to track it in the migrations table!\n")
-			color.White("You may want to manually add it and investigate the error.\n")
-			color.White("Any remaining migrations will not be executed!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
+			color.Red("The migration query executed but unable to track it in the migrations table!")
+			color.White("You may want to manually add it and investigate the error.")
+			color.White("Any remaining migrations will not be executed!")
 			return err
 		}
 
@@ -138,14 +134,12 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 	released, err := database.ReleaseLock(dbox)
 
 	if err != nil {
-		color.Red("Error releasing lock for migration!\n")
-		os.Stderr.WriteString(err.Error() + "\n")
+		color.Red("Error releasing lock for migration!")
 		return err
 	}
 
 	if !released {
-		color.Red("Unable to release lock for migration!\n")
-		return nil
+		return errors.New("Unable to release lock for migration!")
 	}
 
 	return nil

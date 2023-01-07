@@ -11,7 +11,12 @@ import (
 )
 
 func CommandList(cfg config.MigConfig) error {
-	dbox := database.Connect(cfg.Connection)
+	dbox, err := database.Connect(cfg.Connection)
+
+	if err != nil {
+		return err
+	}
+
 	defer dbox.Db.Close()
 
 	status, err := migrations.GetStatus(cfg, dbox)
@@ -20,18 +25,18 @@ func CommandList(cfg config.MigConfig) error {
 		return err
 	}
 
-	color.White("%5s %-48s %5s %-20s %-20s\n", "ID", "Migration", "Batch", "Time of Run", "Note")
+	color.White("%5s %-48s %5s %-20s %-20s", "ID", "Migration", "Batch", "Time of Run", "Note")
 
 	for _, entry := range status.History {
 		switch entry.Status {
 		case "applied":
-			color.Green("%5d %-48s %5d %20s %-20s\n", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Applied")
+			color.Green("%5d %-48s %5d %20s %-20s", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Applied")
 		case "skipped":
-			color.Red("%5s %-48s %5s %20s %-20s\n", "", entry.Migration.Name, "", "", "Migration Skipped!")
+			color.Red("%5s %-48s %5s %20s %-20s", "", entry.Migration.Name, "", "", "Migration Skipped!")
 		case "missing":
-			color.Yellow("%5d %-48s %5d %20s %-20s\n", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Missing File!")
+			color.Yellow("%5d %-48s %5d %20s %-20s", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Missing File!")
 		case "unapplied":
-			color.Cyan("%5s %-48s %5s %20s %-20s\n", "", entry.Migration.Name, "", "", "Ready to Run")
+			color.Cyan("%5s %-48s %5s %20s %-20s", "", entry.Migration.Name, "", "", "Ready to Run")
 		}
 	}
 

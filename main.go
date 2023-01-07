@@ -12,10 +12,13 @@ func main() {
 	cfg, subcommands, err := config.GetConfig()
 
 	if err != nil {
-		color.Red("unable to parse configuration\n")
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Exit(1)
+		color.Red("unable to parse configuration")
+	} else {
+		err = commands.Dispatch(cfg, subcommands)
 	}
 
-	commands.Dispatch(cfg, subcommands)
+	if err != nil {
+		os.Stderr.WriteString(color.RedString(err.Error()) + "\n")
+		os.Exit(1)
+	}
 }

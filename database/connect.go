@@ -2,11 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/url"
-	"os"
-
-	"github.com/fatih/color"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -43,7 +41,7 @@ func (dbox DbBox) QueryRow(qb QueryBox, args ...any) *sql.Row {
 //   insecure -> skip-verify
 //   disable -> false
 
-func Connect(connection string) DbBox {
+func Connect(connection string) (DbBox, error) {
 	var dbox DbBox
 	u, err := url.Parse(connection)
 
@@ -53,9 +51,7 @@ func Connect(connection string) DbBox {
 	tls_in := qs.Get("tls")
 
 	if err != nil {
-		color.Red("unable to parse connection url!\n")
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Exit(2)
+		return dbox, errors.New("unable to parse connection url!")
 	}
 
 	if u.Scheme == "postgresql" {
@@ -75,17 +71,13 @@ func Connect(connection string) DbBox {
 		dbox.Db, err = sql.Open("postgres", fmt.Sprintf("postgresql://%s@%s:%s%s?sslmode=%s", u.User, u.Hostname(), port, u.Path, tls))
 
 		if err != nil {
-			color.Red("unable to connect to postgresql database!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(3)
+			return dbox, errors.New("unable to connect to postgresql database!")
 		}
 
 		err = dbox.Db.Ping()
 
 		if err != nil {
-			color.Red("unable to connect to postgresql database!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(4)
+			return dbox, errors.New("unable to connect to postgresql database!")
 		}
 	} else if u.Scheme == "mysql" {
 		port := "3306"
@@ -107,22 +99,17 @@ func Connect(connection string) DbBox {
 		dbox.Db, err = sql.Open("mysql", mysqlConnString)
 
 		if err != nil {
-			color.Red("unable to connect to mysql database!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(3)
+			return dbox, errors.New("unable to connect to mysql database!")
 		}
 
 		err := dbox.Db.Ping()
 
 		if err != nil {
-			color.Red("unable to connect to mysql database!\n")
-			os.Stderr.WriteString(err.Error() + "\n")
-			os.Exit(4)
+			return dbox, errors.New("unable to connect to mysql database!")
 		}
 	} else {
-		color.Red("mig doesn't support the '%s' database", u.Scheme)
-		os.Exit(5)
+		return dbox, errors.New(fmt.Sprintf("mig doesn't support the '%s' database", u.Scheme))
 	}
 
-	return dbox
+	return dbox, nil
 }
