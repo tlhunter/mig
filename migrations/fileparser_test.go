@@ -13,6 +13,7 @@ func TestGetQueriesFromFile(t *testing.T) {
 	if err != nil {
 		t.Log("had an error", err)
 		t.Fail()
+		return
 	}
 
 	expectation := `CREATE TABLE users (
