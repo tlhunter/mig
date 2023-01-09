@@ -1,3 +1,4 @@
+.DEFAULT_GOAL := build
 MIG_VERSION = $(shell cat version.txt)
 BUILD_TIME = $(shell date +"%Y-%m-%dT%H:%M:%S%z")
 
@@ -7,8 +8,7 @@ GO_FLAGS += "-ldflags=-s -w -X 'github.com/tlhunter/mig/commands.Version=$(MIG_V
 build:
 	go build $(GO_FLAGS) -o mig
 
-tiny:
-	go build $(GO_FLAGS) -o mig
+tiny: build
 	upx mig
 
 multi:
@@ -21,13 +21,12 @@ multi:
 	echo "macOS arm64 (Apple Silicon)"
 	GOOS=darwin GOARCH=arm64 go build $(GO_FLAGS) -o mig-macos-arm64
 
-publish:
-	go build
+publish: build
 	git commit -am "version v$(MIG_VERSION)"
 	git tag "v$(MIG_VERSION)"
 	git push origin main "v$(MIG_VERSION)"
 
-test:
+test: build
 	go test -v ./...
 
 clean:
