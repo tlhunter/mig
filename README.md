@@ -33,12 +33,15 @@ mig --credentials="protocol://user:pass@host:port/dbname"
 MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
 ```
 
-Currently, `mig` supports protocols of `postgresql` and `mysql` with plans to support more. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database:
+Currently, `mig` supports protocols of `postgresql`, `mysql`, and `sqlite`. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database for these different database systems:
 
 ```sh
 mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?tls=disable"
 mig --credentials="mysql://user:hunter2@localhost:3306/dbname?tls=disable"
+mig --credentials="sqlite://localhost/path/to/database.db"
 ```
+
+> Note that SQLite is special in order to fit the URL format. Path values essentially have the first slash stripped. That means `localhost/foo.db` translates to `foo.db`, `localhost//tmp/foo.db` is `/tmp/foo.db`, `localhost/../foo.db` is `../foo.db`, etc. This is unfortunate and will likely change.
 
 There are three connection string options for configuring secure databse connections:
 

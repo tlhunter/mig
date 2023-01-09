@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -113,7 +114,16 @@ func Connect(connection string) (DbBox, error) {
 		// sqlite://user:pass@watever/file.db
 		// sqlite://user:pass@watever//tmp/file.db
 		// sqlite3://user:pass@watever/./file.db
-		dbox.Db, err = sql.Open("sqlite3", ":memory:")
+
+		hostname := u.Hostname()
+		if hostname != "localhost" && hostname != "127.0.0.1" && hostname != "::1" {
+			return dbox, errors.New("sqlite connection requires a host name of localhost!")
+		}
+
+		path := strings.TrimPrefix(u.Path, "/") // /foo -> foo, //foo -> /foo
+
+		dbox.Db, err = sql.Open("sqlite3", path)
+
 		if err != nil {
 			return dbox, errors.New("unable to connect to sqlite database!")
 		}
