@@ -13,10 +13,12 @@ var (
 	BEGIN = database.QueryBox{
 		Postgres: "BEGIN TRANSACTION;\n",
 		Mysql:    "START TRANSACTION;\n",
+		Sqlite:   "BEGIN TRANSACTION;\n",
 	}
 	END = database.QueryBox{
 		Postgres: "COMMIT TRANSACTION;\n",
 		Mysql:    "COMMIT;\n",
+		Sqlite:   "COMMIT TRANSACTION;\n",
 	}
 )
 

@@ -4,10 +4,12 @@ var (
 	OBTAIN = QueryBox{
 		Postgres: `UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 AND is_locked = 0;`,
 		Mysql:    `UPDATE migrations_lock SET is_locked = 1 WHERE ` + "`index`" + ` = 1 AND is_locked = 0;`,
+		Sqlite:   `UPDATE migrations_lock SET is_locked = 1 WHERE "index" = 1 AND is_locked = 0;`,
 	}
 	RELEASE = QueryBox{
 		Postgres: `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 AND is_locked = 1;`,
 		Mysql:    `UPDATE migrations_lock SET is_locked = 0 WHERE ` + "`index`" + ` = 1 AND is_locked = 1;`,
+		Sqlite:   `UPDATE migrations_lock SET is_locked = 0 WHERE "index" = 1 AND is_locked = 1;`,
 	}
 )
 

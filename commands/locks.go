@@ -13,6 +13,10 @@ var (
 	SELECT is_locked AS was_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;
 	UPDATE migrations_lock SET is_locked = 1 WHERE ` + "`index`" + ` = 1;
 COMMIT;`,
+		Sqlite: `BEGIN TRANSACTION;
+	SELECT is_locked AS was_locked FROM migrations_lock WHERE "index" = 1;
+	UPDATE migrations_lock SET is_locked = 1 WHERE "index" = 1;
+COMMIT TRANSACTION;`, // TODO: Does this even work?
 	}
 	UNLOCK = database.QueryBox{
 		Postgres: `UPDATE migrations_lock SET is_locked = 0 WHERE index = 1 RETURNING ( SELECT is_locked AS was_locked FROM migrations_lock WHERE index = 1);`,
@@ -20,6 +24,10 @@ COMMIT;`,
 	SELECT is_locked AS was_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;
 	UPDATE migrations_lock SET is_locked = 0 WHERE ` + "`index`" + ` = 1;
 COMMIT;`,
+		Sqlite: `BEGIN TRANSACTION;
+	SELECT is_locked AS was_locked FROM migrations_lock WHERE "index" = 1;
+	UPDATE migrations_lock SET is_locked = 0 WHERE "index" = 1;
+COMMIT TRANSACTION;`, // TODO: Does this even work?
 	}
 )
 

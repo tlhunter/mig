@@ -9,6 +9,7 @@ import (
 var LIST = database.QueryBox{
 	Postgres: `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
 	Mysql:    `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
+	Sqlite:   `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
 }
 
 type MigrationRow struct {

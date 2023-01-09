@@ -19,7 +19,8 @@ WHERE
 	schemaname = 'public' AND
 	tablename  = 'migrations'
 ) AS table_exists;`,
-	Mysql: `CALL sys.table_exists(DATABASE(), 'migrations', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Mysql:  `CALL sys.table_exists(DATABASE(), 'migrations', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Sqlite: `SELECT name FROM sqlite_master WHERE type='table' AND name='migrations';`,
 }
 
 var EXIST_LOCK = database.QueryBox{
@@ -30,7 +31,8 @@ var EXIST_LOCK = database.QueryBox{
 		schemaname = 'public' AND
 		tablename  = 'migrations_lock'
 	) AS table_exists;`,
-	Mysql: `CALL sys.table_exists(DATABASE(), 'migrations_lock', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Mysql:  `CALL sys.table_exists(DATABASE(), 'migrations_lock', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Sqlite: `SELECT name FROM sqlite_master WHERE type='table' AND name='migrations_lock';`,
 }
 
 var DESCRIBE = database.QueryBox{
@@ -44,12 +46,14 @@ WHERE
 	table_name = 'migrations' OR table_name = 'migrations_lock'
 ORDER BY
 	table_name, column_name;`,
-	Mysql: `DESC migrations;`,
+	Mysql:  `DESC migrations;`,                 // unused
+	Sqlite: `pragma table_info('migrations');`, // unused
 }
 
 var LOCK_STATUS = database.QueryBox{
 	Postgres: `SELECT is_locked FROM migrations_lock WHERE index = 1;`,
 	Mysql:    `SELECT is_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;`,
+	Sqlite:   `SELECT is_locked FROM migrations_lock WHERE "index" = 1;`,
 }
 
 type StatusResponse struct {

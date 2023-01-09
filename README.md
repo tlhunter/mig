@@ -4,7 +4,7 @@
 
 ![mig list screenshot](./docs/screenshot-mig-list.png)
 
-`mig` currently supports **PostgreSQL** and **MySQL** with plans to add more.
+`mig` currently supports **PostgreSQL**, **MySQL**, and **SQLite**. Pull requests to support other DBMS are appreciated.
 
 `mig` isn't quite yet ready for production. When it is `mig` will be released as version 1.0.
 
