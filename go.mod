@@ -3,15 +3,15 @@ module github.com/tlhunter/mig
 go 1.19
 
 require (
+	github.com/DavidGamba/go-getoptions v0.26.0
 	github.com/fatih/color v1.13.0
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
 )
 
 require (
-	github.com/DavidGamba/go-getoptions v0.26.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

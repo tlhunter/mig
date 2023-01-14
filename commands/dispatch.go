@@ -55,7 +55,7 @@ func Dispatch(cfg config.MigConfig, subcommands []string) error {
 		}
 
 	case "version":
-		err = CommandVersion(cfg)
+		err = CommandVersion()
 
 	default:
 		err = errors.New(fmt.Sprintf("unsupported command %s", subcommands[0]))
