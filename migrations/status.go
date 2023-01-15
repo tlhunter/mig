@@ -6,18 +6,18 @@ import (
 )
 
 type MigrationStatus struct {
-	Skipped   int          // number of skipped migrations
-	Missing   int          // number of locally missing file migrations
-	Last      MigrationRow // last successfully executed migration
-	Next      string       // the next migration to execute
-	Applied   int
-	Unapplied int
-	History   []MigrationRowStatus
+	Applied   int                  `json:"applied"`
+	Unapplied int                  `json:"unapplied"`
+	Skipped   int                  `json:"skipped"`        // number of skipped migrations
+	Missing   int                  `json:"missing"`        // number of locally missing file migrations
+	Last      *MigrationRow        `json:"last,omitempty"` // last successfully executed migration
+	Next      string               `json:"next"`           // the next migration to execute
+	History   []MigrationRowStatus `json:"history,omitempty"`
 }
 
 type MigrationRowStatus struct {
-	Migration MigrationRow
-	Status    string
+	Migration MigrationRow `json:"migration"`
+	Status    string       `json:"status"`
 }
 
 func GetStatus(cfg config.MigConfig, dbox database.DbBox) (MigrationStatus, error) {
@@ -53,7 +53,7 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox) (MigrationStatus, erro
 
 		if migFile == migRow.Name {
 			// This migration is present both on disk and in the database
-			status.Last = migRow
+			status.Last = &migRow
 			mfi++
 			mri++
 			status.Applied++
@@ -92,7 +92,7 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox) (MigrationStatus, erro
 		// There are still rows in the database to print
 		for i := mri; i < len(migRows); i++ {
 			migRow := migRows[i]
-			status.Last = migRow
+			status.Last = &migRow
 			status.Applied++
 			status.History = append(status.History, MigrationRowStatus{
 				Migration: migRow,

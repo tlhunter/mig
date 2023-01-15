@@ -12,10 +12,10 @@ var LIST = database.QueryBox{
 }
 
 type MigrationRow struct {
-	Id    int
-	Name  string
-	Batch int
-	Time  time.Time
+	Id    int        `json:"id,omitempty"`
+	Name  string     `json:"name"`
+	Batch int        `json:"batch,omitempty"`
+	Time  *time.Time `json:"time,omitempty"`
 }
 
 func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
@@ -44,7 +44,7 @@ func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
 			Id:    id,
 			Name:  name,
 			Batch: batch,
-			Time:  time,
+			Time:  &time,
 		})
 	}
 

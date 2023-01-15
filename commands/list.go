@@ -1,20 +1,20 @@
 package commands
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 	"github.com/tlhunter/mig/migrations"
+	"github.com/tlhunter/mig/result"
 )
 
-func CommandList(cfg config.MigConfig) error {
+func CommandList(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
 	if err != nil {
-		return err
+		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
 
 	defer dbox.Db.Close()
@@ -22,37 +22,37 @@ func CommandList(cfg config.MigConfig) error {
 	status, err := migrations.GetStatus(cfg, dbox)
 
 	if err != nil {
-		return err
+		return *result.NewErrorWithDetails("unable to get migration status", "unable_get_status", err)
 	}
 
-	color.White("%5s %-48s %5s %-20s %-20s", "ID", "Migration", "Batch", "Time of Run", "Note")
+	res := result.NewSerializable(color.WhiteString("%5s %-48s %5s %-20s %-20s", "ID", "Migration", "Batch", "Time of Run", "Note"), status.History)
 
 	for _, entry := range status.History {
 		switch entry.Status {
 		case "applied":
-			color.Green("%5d %-48s %5d %20s %-20s", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Applied")
+			res.AddSuccessLn(color.GreenString("%5d %-48s %5d %20s %-20s", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Applied"))
 		case "skipped":
-			color.Red("%5s %-48s %5s %20s %-20s", "", entry.Migration.Name, "", "", "Migration Skipped!")
+			res.AddSuccessLn(color.RedString("%5s %-48s %5s %20s %-20s", "", entry.Migration.Name, "", "", "Migration Skipped!"))
 		case "missing":
-			color.Yellow("%5d %-48s %5d %20s %-20s", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Missing File!")
+			res.AddSuccessLn(color.YellowString("%5d %-48s %5d %20s %-20s", entry.Migration.Id, entry.Migration.Name, entry.Migration.Batch, entry.Migration.Time.Format(time.RFC3339), "Missing File!"))
 		case "unapplied":
-			color.Cyan("%5s %-48s %5s %20s %-20s", "", entry.Migration.Name, "", "", "Ready to Run")
+			res.AddSuccessLn(color.CyanString("%5s %-48s %5s %20s %-20s", "", entry.Migration.Name, "", "", "Unapplied"))
 		}
 	}
 
 	if status.Missing > 0 || status.Skipped > 0 {
-		fmt.Println()
+		res.AddSuccessLn("")
 	}
 
 	if status.Skipped > 0 {
-		color.Red("* A skipped migration was encountered. If editing locally you may need to rename the file to the current time.")
+		res.AddSuccessLn(color.RedString("* A skipped migration was encountered. If editing locally you may need to rename the file to the current time."))
 	}
 
 	if status.Missing > 0 {
-		color.Yellow("* A missing migration was encountered. You might need to pull changes from repo.")
+		res.AddSuccessLn(color.YellowString("* A missing migration was encountered. You might need to pull changes from repo."))
 	}
 
-	color.HiWhite("Applied: %d, Unapplied: %d, Skipped: %d, Missing: %d", status.Applied, status.Unapplied, status.Skipped, status.Missing)
+	res.AddSuccessLn(color.HiWhiteString("Applied: %d, Unapplied: %d, Skipped: %d, Missing: %d", status.Applied, status.Unapplied, status.Skipped, status.Missing))
 
-	return nil
+	return *res
 }

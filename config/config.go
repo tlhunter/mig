@@ -1,6 +1,8 @@
 package config
 
-import "errors"
+import (
+	"errors"
+)
 
 const (
 	DEF_MIG_DIR = "./migrations"
@@ -10,12 +12,15 @@ type MigConfig struct {
 	Connection string // DB connection string
 	Migrations string // migrations directory, e.g. ./migrations
 	MigRcPath  string // override path to config file
+	OutputJson bool   // stdout should be valid JSON
 }
 
 func GetConfig() (MigConfig, []string, error) {
 	config := MigConfig{}
 
 	flagConfig, subcommands, _ := GetConfigFromProcessFlags()
+
+	config.OutputJson = flagConfig.OutputJson
 
 	err := SetEnvFromConfigFile(flagConfig.MigRcPath) // reads .env and sets env vars but does not override
 

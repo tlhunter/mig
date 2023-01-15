@@ -12,8 +12,8 @@ var (
 		Mysql:    `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`,
 	}
 	ADD = database.QueryBox{
-		Postgres: `INSERT INTO migrations (id, name, batch, migration_time) VALUES ($1, $2, $3, NOW());`,
-		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());`,
+		Postgres: `INSERT INTO migrations (id, name, batch, migration_time) VALUES ($1, $2, $3, NOW()) RETURNING id, name, batch, migration_time;`,
+		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW()) RETURNING id, name, batch, migration_time;`,
 	}
 	ULTIMATE = database.QueryBox{
 		Postgres: `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
@@ -35,37 +35,41 @@ type BatchAndId struct {
 }
 
 // up
-func AddMigration(dbox database.DbBox, migration string) error {
-	Highest, err := GetHighestValues(dbox)
+func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, error) {
+	var migration MigrationRow
+
+	highest, err := GetHighestValues(dbox)
 
 	if err != nil {
-		return err
+		return migration, err
 	}
 
-	_, err = dbox.Exec(ADD, Highest.Id, migration, Highest.Batch)
+	err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
 
 	if err != nil {
-		return err
+		return migration, err
 	}
 
-	return nil
+	return migration, nil
 }
 
 // upto, all
-func AddMigrationWithBatch(dbox database.DbBox, migration string, group int) error {
-	Highest, err := GetHighestValues(dbox)
+func AddMigrationWithBatch(dbox database.DbBox, migrationName string, group int) (MigrationRow, error) {
+	var migration MigrationRow
+
+	highest, err := GetHighestValues(dbox)
 
 	if err != nil {
-		return err
+		return migration, err
 	}
 
-	_, err = dbox.Exec(ADD, Highest.Id, migration, group)
+	err = dbox.QueryRow(ADD, highest.Id, migrationName, group).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
 
 	if err != nil {
-		return err
+		return migration, err
 	}
 
-	return nil
+	return migration, nil
 }
 
 // down
@@ -101,32 +105,32 @@ func RemoveMigration(dbox database.DbBox, migration string, id int) error {
 }
 
 func GetHighestValues(dbox database.DbBox) (BatchAndId, error) {
-	var Highest BatchAndId
+	var highest BatchAndId
 
 	var count int
 
 	err := dbox.QueryRow(COUNT).Scan(&count)
 
 	if err != nil {
-		return Highest, err
+		return highest, err
 	}
 
 	if count == 0 {
 		// First migration
-		Highest.Id = 1
-		Highest.Batch = 1
+		highest.Id = 1
+		highest.Batch = 1
 
-		return Highest, nil
+		return highest, nil
 	}
 
-	err = dbox.QueryRow(HIGHEST).Scan(&Highest.Batch, &Highest.Id)
+	err = dbox.QueryRow(HIGHEST).Scan(&highest.Batch, &highest.Id)
 
 	if err != nil {
-		return Highest, err
+		return highest, err
 	}
 
-	Highest.Id++
-	Highest.Batch++
+	highest.Id++
+	highest.Batch++
 
-	return Highest, nil
+	return highest, nil
 }

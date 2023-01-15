@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
+	"github.com/tlhunter/mig/result"
 )
 
 var (
@@ -35,11 +35,11 @@ INSERT INTO migrations_lock SET ` + "`index`" + ` = 1, is_locked = 0;`,
 	}
 )
 
-func CommandInit(cfg config.MigConfig) error {
+func CommandInit(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
 	if err != nil {
-		return err
+		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
 
 	defer dbox.Db.Close()
@@ -47,11 +47,8 @@ func CommandInit(cfg config.MigConfig) error {
 	_, err = dbox.Exec(INIT)
 
 	if err != nil {
-		color.Red("error initializing mig!")
-		return err
+		return *result.NewErrorWithDetails("error initializing mig!", "unable_init", err)
 	}
 
-	color.Green("successfully initialized mig.")
-
-	return nil
+	return *result.NewSuccess("successfully initialized mig")
 }
