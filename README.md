@@ -6,17 +6,7 @@
 
 `mig` currently supports **PostgreSQL** and **MySQL** with plans to add more.
 
-
-## v1.0 TODOs
-
-`mig` isn't yet ready for production. When it is `mig` will hit version 1.0. Some of the required tasks to reach this include:
-
-- [ ] unit test everything
-- [ ] add support for sqlite
-- [ ] support JSON output via `--json`
-- [ ] write guides for migrating from other tools to `mig`
-- [ ] make `mig create` templates for common scenarios like renaming columns
-- [ ] allow developers to create their own template files
+`mig` isn't quite yet ready for production. When it is `mig` will be released as version 1.0.
 
 
 ## What is a Migration Runner?
