@@ -95,6 +95,7 @@ func CommandAll(cfg config.MigConfig) result.Response {
 
 		if err != nil {
 			res.SetError("The migration query executed but unable to track it in the migrations table!", "untracked_migration")
+			res.SetErrorDetails(err)
 			res.AddErrorLn("You may want to manually add it and investigate the error.")
 			res.AddErrorLn("Any remaining migrations will not be executed!")
 			return *res

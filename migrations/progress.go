@@ -13,7 +13,7 @@ var (
 	}
 	ADD = database.QueryBox{
 		Postgres: `INSERT INTO migrations (id, name, batch, migration_time) VALUES ($1, $2, $3, NOW()) RETURNING id, name, batch, migration_time;`,
-		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW()) RETURNING id, name, batch, migration_time;`,
+		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());`,
 	}
 	ULTIMATE = database.QueryBox{
 		Postgres: `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
@@ -44,7 +44,16 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 		return migration, err
 	}
 
-	err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+	if dbox.Type == "mysql" {
+		// MySQL provides no easy RETURNING equivalent, so we'll fake it and omit the calculated timestamp
+		_, err = dbox.Exec(ADD, highest.Id, migrationName, highest.Batch)
+		migration.Id = highest.Id
+		migration.Name = migrationName
+		migration.Batch = highest.Batch
+		migration.Time = nil
+	} else {
+		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+	}
 
 	if err != nil {
 		return migration, err
@@ -54,7 +63,7 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 }
 
 // upto, all
-func AddMigrationWithBatch(dbox database.DbBox, migrationName string, group int) (MigrationRow, error) {
+func AddMigrationWithBatch(dbox database.DbBox, migrationName string, batch int) (MigrationRow, error) {
 	var migration MigrationRow
 
 	highest, err := GetHighestValues(dbox)
@@ -63,8 +72,16 @@ func AddMigrationWithBatch(dbox database.DbBox, migrationName string, group int)
 		return migration, err
 	}
 
-	err = dbox.QueryRow(ADD, highest.Id, migrationName, group).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
-
+	if dbox.Type == "mysql" {
+		// MySQL provides no easy RETURNING equivalent, so we'll fake it and omit the calculated timestamp
+		_, err = dbox.Exec(ADD, highest.Id, migrationName, highest.Batch)
+		migration.Id = highest.Id
+		migration.Name = migrationName
+		migration.Batch = batch
+		migration.Time = nil
+	} else {
+		err = dbox.QueryRow(ADD, highest.Id, migrationName, batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+	}
 	if err != nil {
 		return migration, err
 	}
