@@ -1,66 +1,66 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/tlhunter/mig/config"
+	"github.com/tlhunter/mig/result"
 )
 
-func Dispatch(cfg config.MigConfig, subcommands []string) error {
-	var err error
+func Dispatch(cfg config.MigConfig, subcommands []string) result.Response {
+	var res result.Response
 	if len(subcommands) == 0 {
-		err = errors.New("usage: mig <command>")
+		res.SetError("usage: mig <command>", "command_usage")
 	}
 
 	switch subcommands[0] {
 	case "create":
 		if len(subcommands) >= 2 {
-			err = CommandCreate(cfg, subcommands[1])
+			res = CommandCreate(cfg, subcommands[1])
 		} else {
-			err = errors.New("usage: mig create \"<migration name>\"")
+			res.SetError("usage: mig create \"<migration name>\"", "command_usage")
 		}
 
 	case "init":
-		err = CommandInit(cfg)
+		res = CommandInit(cfg)
 
 	case "lock":
-		err = CommandLock(cfg)
+		res = CommandLock(cfg)
 
 	case "unlock":
-		err = CommandUnlock(cfg)
+		res = CommandUnlock(cfg)
 
 	case "list":
 		fallthrough
 	case "ls":
-		err = CommandList(cfg)
+		res = CommandList(cfg)
 
 	case "status":
-		err = CommandStatus(cfg)
+		res = CommandStatus(cfg)
 
 	case "up":
-		err = CommandUp(cfg)
+		res = CommandUp(cfg)
 
 	case "down":
-		err = CommandDown(cfg)
+		res = CommandDown(cfg)
 
 	case "all":
-		err = CommandAll(cfg)
+		res = CommandAll(cfg)
 
 	case "upto":
 		if len(subcommands) >= 2 {
-			err = CommandUpto(cfg, subcommands[1])
+			res = CommandUpto(cfg, subcommands[1])
 		} else {
-			err = errors.New("usage: mig upto \"<migration name>\"")
+			res.SetError("usage: mig upto \"<migration name>\"", "command_usage")
 		}
 
 	case "version":
-		err = CommandVersion()
+		res = CommandVersion(cfg)
 
 	default:
-		err = errors.New(fmt.Sprintf("unsupported command %s", subcommands[0]))
+		res.SetError(fmt.Sprintf("unsupported command %s", subcommands[0]), "command_unknown")
 	}
 
-	return err
+	return res
 
 }

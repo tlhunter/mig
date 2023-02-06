@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
+	"github.com/tlhunter/mig/result"
 )
 
 var (
@@ -23,11 +23,11 @@ COMMIT;`,
 	}
 )
 
-func CommandLock(cfg config.MigConfig) error {
+func CommandLock(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
 	if err != nil {
-		return err
+		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
 
 	defer dbox.Db.Close()
@@ -36,25 +36,21 @@ func CommandLock(cfg config.MigConfig) error {
 	err = dbox.QueryRow(LOCK).Scan(&was_locked)
 
 	if err != nil {
-		color.Red("mig: unable to lock!")
-		return err
+		return *result.NewErrorWithDetails("unable to lock!", "unable_lock", err)
 	}
 
 	if was_locked == 0 {
-		color.Green("mig: successfully locked.")
-		return nil
+		return *result.NewSuccess("successfully locked.")
 	}
 
-	color.Yellow("mig: already locked!")
-
-	return nil
+	return *result.NewSuccess("already locked!") // TODO: yellow
 }
 
-func CommandUnlock(cfg config.MigConfig) error {
+func CommandUnlock(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
 	if err != nil {
-		return err
+		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
 
 	defer dbox.Db.Close()
@@ -63,16 +59,12 @@ func CommandUnlock(cfg config.MigConfig) error {
 	err = dbox.QueryRow(UNLOCK).Scan(&was_locked)
 
 	if err != nil {
-		color.Red("mig: unable to unlock!")
-		return err
+		return *result.NewErrorWithDetails("unable to unlock!", "unable_unlock", err)
 	}
 
 	if was_locked == 1 {
-		color.Green("mig: successfully unlocked.")
-		return nil
+		return *result.NewSuccess("successfully unlocked.")
 	}
 
-	color.Yellow("mig: already unlocked!")
-
-	return nil
+	return *result.NewSuccess("already unlocked!") // TODO: yellow
 }

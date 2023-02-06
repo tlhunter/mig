@@ -3,12 +3,13 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/tlhunter/mig/config"
+	"github.com/tlhunter/mig/result"
 )
 
 const TEMPLATE = `--BEGIN MIGRATION UP--
@@ -24,7 +25,11 @@ DROP TABLE foo;
 var unsafes = regexp.MustCompile(`[^a-z-_]`)
 var repeaters = regexp.MustCompile(`_+`)
 
-func CommandCreate(cfg config.MigConfig, name string) error {
+type CommandCreateResult struct {
+	Filename string `json:"filename"`
+}
+
+func CommandCreate(cfg config.MigConfig, name string) result.Response {
 	name = SanitizeName(name)
 	now := time.Now()
 
@@ -33,25 +38,23 @@ func CommandCreate(cfg config.MigConfig, name string) error {
 		now.Hour(), now.Minute(), now.Second(),
 		name)
 
-	filePath := cfg.Migrations + "/" + filename
+	filePath := filepath.Join(cfg.Migrations, filename)
 
 	file, err := os.Create(filePath)
 	if err != nil {
-		color.Red("Unable to create migration file!")
-		return err
+		return *result.NewErrorWithDetails("Unable to create migration file!", "unable_create_migration", err)
 	}
 
 	defer file.Close()
 
 	_, err = file.WriteString(TEMPLATE)
 	if err != nil {
-		color.Red("Unable to write to migration file!")
-		return err
+		return *result.NewErrorWithDetails("Unable to write to migration file!", "unable_write_migration", err)
 	}
 
-	color.Green("created migration: " + filePath)
-
-	return nil
+	return *result.NewSerializable("created migration: "+filePath, CommandCreateResult{
+		Filename: filePath,
+	})
 }
 
 func SanitizeName(name string) string {

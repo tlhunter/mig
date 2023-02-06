@@ -11,6 +11,7 @@ func GetConfigFromProcessFlags() (MigConfig, []string, error) {
 	connection := opt.String("connection", "")
 	migrations := opt.String("migrations", "")
 	migRcPath := opt.String("file", "")
+	outputJson := opt.Bool("json", false)
 
 	subcommand, err := opt.Parse(os.Args[1:])
 
@@ -18,6 +19,7 @@ func GetConfigFromProcessFlags() (MigConfig, []string, error) {
 		Connection: *connection,
 		Migrations: *migrations,
 		MigRcPath:  *migRcPath,
+		OutputJson: *outputJson,
 	}
 
 	if err != nil {

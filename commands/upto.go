@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -9,17 +8,22 @@ import (
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 	"github.com/tlhunter/mig/migrations"
+	"github.com/tlhunter/mig/result"
 )
+
+type CommandUptoResult struct {
+	History []migrations.MigrationRowStatus `json:"history"`
+}
 
 // TODO: DRY up the common code between up, upto, all, and down
 // TODO: This requires exact match "TIME_foo.sql"
 //       would be nice to support "TIME_foo" or "foo" if unambiguous
 
-func CommandUpto(cfg config.MigConfig, target string) error {
+func CommandUpto(cfg config.MigConfig, target string) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
 	if err != nil {
-		return err
+		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
 
 	defer dbox.Db.Close()
@@ -28,21 +32,20 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 	status, err := migrations.GetStatus(cfg, dbox)
 
 	if err != nil {
-		color.Red("Encountered an error trying to get migrations status!")
-		return err
+		return *result.NewErrorWithDetails("Encountered an error trying to get migrations status!", "retrieve_status", err)
 	}
 
 	if status.Skipped > 0 {
-		return errors.New("Refusing to run with skipped migrations! Run `mig status` for details.")
+		return *result.NewError("Refusing to run with skipped migrations! Run `mig status` for details.", "abort_skipped_migrations")
 	}
 
 	if status.Next == "" {
-		return errors.New("There are no migrations to run.")
+		return *result.NewError("There are no migrations to run.", "no_migrations")
 	}
 
 	// ensure that the target is unapplied and ahead of current
 	reachedCandidates := false
-	if status.Last.Name == "" {
+	if status.Last == nil || status.Last.Name == "" {
 		// if no migrations were run then any migration is fair game
 		reachedCandidates = true
 	}
@@ -63,24 +66,29 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 	}
 
 	if !targetIsCandidate {
-		return errors.New(fmt.Sprintf("Unable to find an unexecuted upcoming migration named %s", target))
+		// TODO: The name of the migration should be a JSON field
+		return *result.NewError(fmt.Sprintf("Unable to find an unexecuted upcoming migration named %s", target), "cannot_find_migration")
 	}
 
 	locked, err := database.ObtainLock(dbox)
 
 	if err != nil {
-		color.Red("Error obtaining lock for running migrations!")
-		return err
+		return *result.NewErrorWithDetails("Error obtaining lock for migration!", "obtain_lock", err)
 	}
 
 	if !locked {
-		return errors.New("Unable to obtain lock for running migrations!")
+		return *result.NewError("Unable to obtain lock for migration!", "obtain_lock")
 	}
 
 	highest, err := migrations.GetHighestValues(dbox)
 	batchId := highest.Batch
 
-	color.HiWhite("Running migrations for batch %d...", batchId)
+	var executedMigrations []migrations.MigrationRow
+
+	res := result.NewSerializable(color.HiWhiteString("Running migrations for batch %d...", batchId), CommandUpFamilyResult{
+		MigrationBatch: batchId,
+		Migrations:     &executedMigrations,
+	})
 
 	for {
 		status, err := migrations.GetStatus(cfg, dbox)
@@ -96,8 +104,8 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 		queries, err := migrations.GetQueriesFromFile(filename)
 
 		if err != nil {
-			color.Red("Error attempting to read next migration file!")
-			return err
+			// TODO: Should tell user the `filename`
+			return *result.NewErrorWithDetails("Error attempting to read next migration file!", "read_next_migration", err)
 		}
 
 		var query string
@@ -111,20 +119,21 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 		_, err = dbox.Db.Exec(query)
 
 		if err != nil {
-			color.Red("Encountered an error while running migration!")
-			return err
+			return *result.NewErrorWithDetails("Encountered an error while running migration!", "migration_failed", err)
 		}
 
-		color.Green("Migration %s was successfully applied!", next)
+		res.AddSuccessLn(color.GreenString("Migration %s was successfully applied!", next))
 
-		err = migrations.AddMigrationWithBatch(dbox, next, batchId)
+		migration, err := migrations.AddMigrationWithBatch(dbox, next, batchId)
 
 		if err != nil {
-			color.Red("The migration query executed but unable to track it in the migrations table!")
-			color.White("You may want to manually add it and investigate the error.")
-			color.White("Any remaining migrations will not be executed!")
-			return err
+			res.SetError("The migration query executed but unable to track it in the migrations table!", "untracked_migration")
+			res.AddErrorLn("You may want to manually add it and investigate the error.")
+			res.AddErrorLn("Any remaining migrations will not be executed!")
+			return *res
 		}
+
+		executedMigrations = append(executedMigrations, migration)
 
 		if next == target {
 			break
@@ -134,13 +143,13 @@ func CommandUpto(cfg config.MigConfig, target string) error {
 	released, err := database.ReleaseLock(dbox)
 
 	if err != nil {
-		color.Red("Error releasing lock for migration!")
-		return err
+		res.SetError("Error releasing lock after running migration!", "release_lock")
+		return *res
 	}
 
 	if !released {
-		return errors.New("Unable to release lock for migration!")
+		res.SetError("Unable to release lock after running migration!", "release_lock")
 	}
 
-	return nil
+	return *res
 }

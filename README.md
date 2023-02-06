@@ -64,6 +64,14 @@ mig status --file="prod.migrc"
 mig --file="local.migrc" down
 ```
 
+### JSON Output
+
+Provide the flag `--json` and `mig` will output a single line valid JSON document.
+
+```sh
+mig version --json
+```
+
 
 ## Commands
 
