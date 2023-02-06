@@ -23,6 +23,11 @@ type MigrationName struct {
 	Migration string `json:"migration"`
 }
 
+type CommandUpResult struct {
+	MigrationBatch int                      `json:"batch"`
+	Migration      *migrations.MigrationRow `json:"migration"`
+}
+
 func CommandUp(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
@@ -88,9 +93,9 @@ func CommandUp(cfg config.MigConfig) result.Response {
 		return *res
 	}
 
-	res := result.NewSerializable(color.GreenString("Migration %s was successfully applied!", next), CommandUpFamilyResult{
+	res := result.NewSerializable(color.GreenString("Migration %s was successfully applied!", next), CommandUpResult{
 		MigrationBatch: migration.Batch,
-		Migrations:     &[]migrations.MigrationRow{migration},
+		Migration:      &migration,
 	})
 
 	released, err := database.ReleaseLock(dbox)
