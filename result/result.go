@@ -3,6 +3,7 @@ package result
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -60,12 +61,24 @@ type Response struct {
 }
 
 func (r *Response) AddSuccessLn(line string) {
-	r.Success += "\n" + line
+	// when switching from single to multi line, assuming we already have content, add a newline
+	if !r.SuccessMultiline && r.Success != "" {
+		r.Success += "\n"
+	}
+
+	r.Success += line + "\n"
+
 	r.SuccessMultiline = true
 }
 
 func (r *Response) AddErrorLn(line string) {
-	r.Error += "\n" + line
+	// when switching from single to multi line, assuming we already have content, add a newline
+	if !r.ErrorMultiline && r.Error != "" {
+		r.Error += "\n"
+	}
+
+	r.Error += line + "\n"
+
 	r.ErrorMultiline = true
 }
 
@@ -104,22 +117,22 @@ func (r Response) Display(encode bool) error {
 	} else {
 		if r.Error != "" {
 			if r.ErrorMultiline {
-				fmt.Println(r.Error)
+				fmt.Println(strings.TrimSuffix(r.Error, "\n"))
 			} else {
-				color.Red(r.Error)
+				color.Red(strings.TrimSuffix(r.Error, "\n"))
 			}
 		}
 
 		if r.Details != "" {
-			color.Yellow(r.Details)
+			color.Yellow(strings.TrimSuffix(r.Details, "\n"))
 		}
 
 		if r.Success != "" {
 
 			if r.ErrorMultiline {
-				fmt.Println(r.Success)
+				fmt.Println(strings.TrimSuffix(r.Success, "\n"))
 			} else {
-				color.HiGreen(r.Success)
+				color.HiGreen(strings.TrimSuffix(r.Success, "\n"))
 			}
 		}
 	}

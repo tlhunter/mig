@@ -42,14 +42,14 @@ func CommandList(cfg config.MigConfig) result.Response {
 
 	if status.Missing > 0 || status.Skipped > 0 {
 		res.AddSuccessLn("")
-	}
 
-	if status.Skipped > 0 {
-		res.AddSuccessLn(color.RedString("* A skipped migration was encountered. If editing locally you may need to rename the file to the current time."))
-	}
+		if status.Skipped > 0 {
+			res.AddSuccessLn(color.RedString("* A skipped migration was encountered. If editing locally you may need to rename the file to the current time."))
+		}
 
-	if status.Missing > 0 {
-		res.AddSuccessLn(color.YellowString("* A missing migration was encountered. You might need to pull changes from repo."))
+		if status.Missing > 0 {
+			res.AddSuccessLn(color.YellowString("* A missing migration was encountered. You might need to pull changes from repo."))
+		}
 	}
 
 	res.AddSuccessLn(color.HiWhiteString("Applied: %d, Unapplied: %d, Skipped: %d, Missing: %d", status.Applied, status.Unapplied, status.Skipped, status.Missing))

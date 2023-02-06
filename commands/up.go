@@ -1,7 +1,8 @@
 package commands
 
 import (
-	"github.com/fatih/color"
+	"fmt"
+
 	"github.com/tlhunter/mig/config"
 	"github.com/tlhunter/mig/database"
 	"github.com/tlhunter/mig/migrations"
@@ -93,7 +94,7 @@ func CommandUp(cfg config.MigConfig) result.Response {
 		return *res
 	}
 
-	res := result.NewSerializable(color.GreenString("Migration %s was successfully applied!", next), CommandUpResult{
+	res := result.NewSerializable(fmt.Sprintf("Migration %s was successfully applied!", next), CommandUpResult{
 		MigrationBatch: migration.Batch,
 		Migration:      &migration,
 	})
