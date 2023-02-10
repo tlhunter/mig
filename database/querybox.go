@@ -2,6 +2,7 @@ package database
 
 import "fmt"
 
+// TODO: Kill QueryBox once refactor is complete
 type QueryBox struct {
 	Postgres string
 	Mysql    string
