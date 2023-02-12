@@ -19,6 +19,8 @@ func CommandInit(cfg config.MigConfig) result.Response {
 		err = postgresInit(cfg, dbox)
 	} else if dbox.Type == "mysql" {
 		err = mysqlInit(cfg, dbox)
+	} else {
+		panic("unknown database: " + dbox.Type)
 	}
 
 	if err != nil {
@@ -29,35 +31,79 @@ func CommandInit(cfg config.MigConfig) result.Response {
 }
 
 func postgresInit(cfg config.MigConfig, dbox database.DbBox) error {
-	_, err := dbox.Db.Exec(`CREATE TABLE migrations (
-	id serial NOT NULL,
-	name varchar(255) NULL,
-	batch int4 NULL,
-	migration_time timestamptz NULL,
-	CONSTRAINT migrations_pkey PRIMARY KEY (id)
-);
-CREATE TABLE migrations_lock (
-	"index" serial NOT NULL,
-	is_locked int4 NULL,
-	CONSTRAINT migrations_lock_pkey PRIMARY KEY (index)
-);
-INSERT INTO migrations_lock ("index", is_locked) VALUES(1, 0);`)
+	tx, err := dbox.Db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`CREATE TABLE migrations (
+		id serial NOT NULL,
+		name varchar(255) NULL,
+		batch int4 NULL,
+		migration_time timestamptz NULL,
+		CONSTRAINT migrations_pkey PRIMARY KEY (id)
+	);`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE TABLE migrations_lock (
+		"index" serial NOT NULL,
+		is_locked int4 NULL,
+		CONSTRAINT migrations_lock_pkey PRIMARY KEY (index)
+	);`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`INSERT INTO migrations_lock ("index", is_locked) VALUES(1, 0);`)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
 
 	return err
 }
 
 func mysqlInit(cfg config.MigConfig, dbox database.DbBox) error {
-	_, err := dbox.Db.Exec(`CREATE TABLE migrations (
-	id serial NOT NULL PRIMARY KEY,
-	name varchar(255) NULL,
-	batch int4 NULL,
-	migration_time TIMESTAMP NULL
-);
-CREATE TABLE migrations_lock (
-	` + "`index`" + ` serial NOT NULL PRIMARY KEY,
-	is_locked int4 NULL
-);
-INSERT INTO migrations_lock SET ` + "`index`" + ` = 1, is_locked = 0;`)
+	tx, err := dbox.Db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`CREATE TABLE migrations (
+		id serial NOT NULL PRIMARY KEY,
+		name varchar(255) NULL,
+		batch int4 NULL,
+		migration_time TIMESTAMP NULL
+	);`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE TABLE migrations_lock (
+		` + "`index`" + ` serial NOT NULL PRIMARY KEY,
+		is_locked int4 NULL
+	);`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`INSERT INTO migrations_lock SET ` + "`index`" + ` = 1, is_locked = 0;`)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
 
 	return err
 }
