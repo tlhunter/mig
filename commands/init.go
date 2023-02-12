@@ -15,10 +15,10 @@ func CommandInit(cfg config.MigConfig) result.Response {
 
 	defer dbox.Db.Close()
 
-	if dbox.Type == "postgresql" {
-		err = postgresInit(cfg, dbox)
-	} else if dbox.Type == "mysql" {
-		err = mysqlInit(cfg, dbox)
+	if dbox.IsPostgres {
+		err = postgresInit(dbox)
+	} else if dbox.IsMysql {
+		err = mysqlInit(dbox)
 	} else {
 		panic("unknown database: " + dbox.Type)
 	}
@@ -30,7 +30,7 @@ func CommandInit(cfg config.MigConfig) result.Response {
 	return *result.NewSuccess("successfully initialized mig")
 }
 
-func postgresInit(cfg config.MigConfig, dbox database.DbBox) error {
+func postgresInit(dbox database.DbBox) error {
 	tx, err := dbox.Db.Begin()
 	if err != nil {
 		return err
@@ -67,10 +67,10 @@ func postgresInit(cfg config.MigConfig, dbox database.DbBox) error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
-func mysqlInit(cfg config.MigConfig, dbox database.DbBox) error {
+func mysqlInit(dbox database.DbBox) error {
 	tx, err := dbox.Db.Begin()
 	if err != nil {
 		return err
@@ -105,5 +105,5 @@ func mysqlInit(cfg config.MigConfig, dbox database.DbBox) error {
 		return err
 	}
 
-	return err
+	return nil
 }
