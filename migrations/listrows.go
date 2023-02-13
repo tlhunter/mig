@@ -6,11 +6,6 @@ import (
 	"github.com/tlhunter/mig/database"
 )
 
-var LIST = database.QueryBox{
-	Postgres: `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
-	Mysql:    `SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;`,
-}
-
 type MigrationRow struct {
 	Id    int        `json:"id,omitempty"`
 	Name  string     `json:"name"`
@@ -21,8 +16,11 @@ type MigrationRow struct {
 func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
 	var migRows []MigrationRow
 
-	rows, err := dbox.Query(LIST)
+	if !dbox.IsMysql && !dbox.IsPostgres {
+		panic("unknown database: " + dbox.Type)
+	}
 
+	rows, err := dbox.Db.Query("SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;") // query is the same for MySQL and Postgres
 	if err != nil {
 		return migRows, err
 	}
@@ -34,8 +32,8 @@ func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
 		var name string
 		var batch int
 		var time time.Time
-		err = rows.Scan(&id, &name, &batch, &time)
 
+		err = rows.Scan(&id, &name, &batch, &time)
 		if err != nil {
 			return migRows, err
 		}
