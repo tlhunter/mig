@@ -64,7 +64,6 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 	// Attempt to connect to database
 
 	dbox, err := database.Connect(cfg.Connection)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
@@ -74,7 +73,6 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 	existMigrations := false
 
 	err = dbox.QueryRow(EXIST_MIGRATIONS).Scan(&existMigrations)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("unable to tell if 'migrations' table exists!", "unable_check_migrations", err)
 	}
@@ -82,7 +80,6 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 	existLock := false
 
 	err = dbox.QueryRow(EXIST_LOCK).Scan(&existLock)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("unable to tell if 'migrations_lock' table exists!", "unable_check_migrations_lock", err)
 	}
@@ -126,7 +123,6 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 		res.AddSuccessLn(color.YellowString("migration table description check is currently unimplemented for mysql."))
 	} else {
 		rows, err := dbox.Query(DESCRIBE)
-
 		if err != nil {
 			return *result.NewErrorWithDetails("unable to describe the migration tables!", "unable_describe", err)
 		}
@@ -176,8 +172,8 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 	// Check if locked
 
 	locked := false
-	err = dbox.QueryRow(LOCK_STATUS).Scan(&locked)
 
+	err = dbox.QueryRow(LOCK_STATUS).Scan(&locked)
 	if err != nil {
 		return *result.NewErrorWithDetails("unable to determine lock status!", "unable_determine_lock_status", err)
 	}
@@ -195,6 +191,9 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 	// Display the name of the last run migration
 
 	status, err := migrations.GetStatus(cfg, dbox)
+	if err != nil {
+		return *result.NewErrorWithDetails("Encountered an error trying to get migrations status!", "retrieve_status", err)
+	}
 
 	if cfg.OutputJson {
 		status.History = nil // omit for status command, it's still present for list command
@@ -209,10 +208,6 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 		}
 
 		return *res
-	}
-
-	if err != nil {
-		return *result.NewErrorWithDetails("unable to determine migration status!", "unable_determine_migration_status", err)
 	}
 
 	if status.Last != nil && status.Last.Name != "" {

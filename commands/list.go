@@ -12,7 +12,6 @@ import (
 
 func CommandList(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
@@ -20,7 +19,6 @@ func CommandList(cfg config.MigConfig) result.Response {
 	defer dbox.Db.Close()
 
 	status, err := migrations.GetStatus(cfg, dbox)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("unable to get migration status", "unable_get_status", err)
 	}

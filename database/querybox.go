@@ -2,7 +2,8 @@ package database
 
 import "fmt"
 
-// TODO: Kill QueryBox once refactor is complete
+// QueryBox makes it easy to store multiple queries for different databases.
+// Use it when an operation can always be completed with a single query for each database type.
 type QueryBox struct {
 	Postgres string
 	Mysql    string

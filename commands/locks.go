@@ -8,7 +8,6 @@ import (
 
 func CommandLock(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
@@ -38,6 +37,7 @@ func CommandLock(cfg config.MigConfig) result.Response {
 
 func postgresLock(dbox database.DbBox) (bool, error) {
 	var wasLocked int
+
 	err := dbox.Db.QueryRow("UPDATE migrations_lock SET is_locked = 1 WHERE index = 1 RETURNING ( SELECT is_locked AS was_locked FROM migrations_lock WHERE index = 1);").Scan(&wasLocked)
 	if err != nil {
 		return false, err
@@ -62,6 +62,9 @@ func mysqlLock(dbox database.DbBox) (bool, error) {
 	}
 
 	_, err = tx.Exec("UPDATE migrations_lock SET is_locked = 1 WHERE `index` = 1;")
+	if err != nil {
+		return false, err
+	}
 
 	if err = tx.Commit(); err != nil {
 		return false, err
@@ -127,6 +130,10 @@ func mysqlUnlock(dbox database.DbBox) (bool, error) {
 	}
 
 	_, err = tx.Exec("UPDATE migrations_lock SET is_locked = 0 WHERE `index` = 1;")
+	if err != nil {
+		return false, err
+	}
+
 	if err = tx.Commit(); err != nil {
 		return false, err
 	}

@@ -44,7 +44,6 @@ func GetQueriesFromFile(filename string) (MigrationPair, error) {
 	state := STATE_START
 
 	file, err := os.Open(filename)
-
 	if err != nil {
 		return pair, err
 	}

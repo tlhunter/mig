@@ -20,7 +20,6 @@ type CommandUpResult struct {
 
 func CommandUp(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
@@ -28,17 +27,14 @@ func CommandUp(cfg config.MigConfig) result.Response {
 	defer dbox.Db.Close()
 
 	status, err := migrations.GetStatus(cfg, dbox)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("Encountered an error trying to get migrations status!", "retrieve_status", err)
 	}
-
 	if status.Skipped > 0 {
 		return *result.NewError("Refusing to run with skipped migrations! Run `mig status` for details.", "abort_skipped_migrations")
 	}
 
 	next := status.Next
-
 	if next == "" {
 		return *result.NewError("There are no migrations to run.", "no_migrations")
 	}
@@ -46,29 +42,24 @@ func CommandUp(cfg config.MigConfig) result.Response {
 	filename := cfg.Migrations + "/" + next
 
 	queries, err := migrations.GetQueriesFromFile(filename)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("Error attempting to read next migration file!", "read_next_migration", err)
 	}
 
 	locked, err := database.ObtainLock(dbox)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("Error obtaining lock for migration!", "obtain_lock", err)
 	}
-
 	if !locked {
 		return *result.NewError("Unable to obtain lock for migration!", "obtain_lock")
 	}
 
 	err = dbox.ExecMaybeTx(queries.Up, queries.UpTx)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("Encountered an error while running migration!", "migration_failed", err)
 	}
 
 	migration, err := migrations.AddMigration(dbox, next)
-
 	if err != nil {
 		res := result.NewErrorWithDetails("The migration query executed but unable to track it in the migrations table!", "untracked_migration", err)
 		res.AddErrorLn("You may want to manually add it and investigate the error.")
@@ -81,12 +72,10 @@ func CommandUp(cfg config.MigConfig) result.Response {
 	})
 
 	released, err := database.ReleaseLock(dbox)
-
 	if err != nil {
 		res.SetError("Error releasing lock after running migration!", "release_lock")
 		return *res
 	}
-
 	if !released {
 		res.SetError("Unable to release lock after running migration!", "release_lock")
 	}

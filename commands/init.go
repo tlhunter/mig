@@ -8,7 +8,6 @@ import (
 
 func CommandInit(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
