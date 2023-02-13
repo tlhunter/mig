@@ -34,6 +34,30 @@ func (dbox DbBox) QueryRow(qb QueryBox, args ...any) *sql.Row {
 	return dbox.Db.QueryRow(qb.For(dbox.Type), args...)
 }
 
+// This is a convenience wrapper around running up and down transaction queries
+func (dbox DbBox) ExecMaybeTx(query string, transaction bool) error {
+	if transaction {
+		tx, err := dbox.Db.Begin()
+		if err != nil {
+			return err
+		}
+
+		defer tx.Rollback()
+
+		_, err = tx.Exec(query)
+		if err != nil {
+			return err
+		}
+
+		return tx.Commit()
+	} else {
+		_, err := dbox.Db.Exec(query)
+
+		return err
+	}
+
+}
+
 // mig needs a common TLS flag mapping across all RDBMS
 // Postgres
 //   verify -> verify-full

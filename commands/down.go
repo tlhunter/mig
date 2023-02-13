@@ -53,15 +53,7 @@ func CommandDown(cfg config.MigConfig) result.Response {
 		return *result.NewError("Unable to obtain lock for migrating down!", "obtain_lock")
 	}
 
-	var query string
-
-	if queries.DownTx {
-		query = BEGIN.For(dbox.Type) + queries.Down + END.For(dbox.Type)
-	} else {
-		query = queries.Down
-	}
-
-	_, err = dbox.Db.Exec(query)
+	err = dbox.ExecMaybeTx(queries.Down, queries.DownTx)
 
 	if err != nil {
 		return *result.NewErrorWithDetails("Encountered an error while running down migration!", "migration_failed", err)

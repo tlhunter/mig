@@ -9,17 +9,6 @@ import (
 	"github.com/tlhunter/mig/result"
 )
 
-var (
-	BEGIN = database.QueryBox{
-		Postgres: "BEGIN TRANSACTION;\n",
-		Mysql:    "START TRANSACTION;\n",
-	}
-	END = database.QueryBox{
-		Postgres: "COMMIT TRANSACTION;\n",
-		Mysql:    "COMMIT;\n",
-	}
-)
-
 type MigrationName struct {
 	Migration string `json:"migration"`
 }
@@ -72,15 +61,7 @@ func CommandUp(cfg config.MigConfig) result.Response {
 		return *result.NewError("Unable to obtain lock for migration!", "obtain_lock")
 	}
 
-	var query string
-
-	if queries.UpTx {
-		query = BEGIN.For(dbox.Type) + queries.Up + END.For(dbox.Type)
-	} else {
-		query = queries.Up
-	}
-
-	_, err = dbox.Db.Exec(query)
+	err = dbox.ExecMaybeTx(queries.Up, queries.UpTx)
 
 	if err != nil {
 		return *result.NewErrorWithDetails("Encountered an error while running migration!", "migration_failed", err)

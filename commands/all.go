@@ -75,15 +75,7 @@ func CommandAll(cfg config.MigConfig) result.Response {
 			return *result.NewErrorWithDetails("Error attempting to read next migration file!", "read_next_migration", err)
 		}
 
-		var query string
-
-		if queries.UpTx {
-			query = BEGIN.For(dbox.Type) + queries.Up + END.For(dbox.Type)
-		} else {
-			query = queries.Up
-		}
-
-		_, err = dbox.Db.Exec(query)
+		err = dbox.ExecMaybeTx(queries.Up, queries.UpTx)
 
 		if err != nil {
 			return *result.NewErrorWithDetails("Encountered an error while running migration!", "migration_failed", err)
