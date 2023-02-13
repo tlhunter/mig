@@ -24,13 +24,11 @@ func GetStatus(cfg config.MigConfig, dbox database.DbBox) (MigrationStatus, erro
 	var status MigrationStatus
 
 	migFiles, err := ListFiles(cfg.Migrations)
-
 	if err != nil {
 		return status, err
 	}
 
 	migRows, err := ListRows(dbox)
-
 	if err != nil {
 		return status, err
 	}

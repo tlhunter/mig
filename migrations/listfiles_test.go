@@ -8,7 +8,6 @@ import (
 
 func TestListFiles(t *testing.T) {
 	files, err := ListFiles("../tests/postgres")
-
 	if err != nil {
 		t.Log("error listing files", err)
 		t.Fail()

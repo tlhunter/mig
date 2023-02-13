@@ -9,7 +9,6 @@ func ListFiles(directory string) ([]string, error) {
 	var migFiles []string
 
 	files, err := os.ReadDir(directory)
-
 	if err != nil {
 		return migFiles, err
 	}

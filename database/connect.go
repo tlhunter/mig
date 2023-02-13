@@ -12,7 +12,10 @@ import (
 
 type DbBox struct {
 	Db   *sql.DB
-	Type string
+	Type string // TODO: Make this lowercase
+
+	IsPostgres bool // indicates this connection is for PostgreSQL
+	IsMysql    bool // indicates this connection is for MySQL
 }
 
 func (dbox DbBox) GetQuery(qb QueryBox) string {
@@ -29,6 +32,30 @@ func (dbox DbBox) Query(qb QueryBox, args ...any) (*sql.Rows, error) {
 
 func (dbox DbBox) QueryRow(qb QueryBox, args ...any) *sql.Row {
 	return dbox.Db.QueryRow(qb.For(dbox.Type), args...)
+}
+
+// This is a convenience wrapper around running up and down transaction queries
+func (dbox DbBox) ExecMaybeTx(query string, transaction bool) error {
+	if transaction {
+		tx, err := dbox.Db.Begin()
+		if err != nil {
+			return err
+		}
+
+		defer tx.Rollback()
+
+		_, err = tx.Exec(query)
+		if err != nil {
+			return err
+		}
+
+		return tx.Commit()
+	} else {
+		_, err := dbox.Db.Exec(query)
+
+		return err
+	}
+
 }
 
 // mig needs a common TLS flag mapping across all RDBMS
@@ -55,6 +82,7 @@ func Connect(connection string) (DbBox, error) {
 	}
 
 	if u.Scheme == "postgresql" {
+		dbox.IsPostgres = true
 		tls := "disable"
 
 		if tls_in == "verify" {
@@ -80,6 +108,7 @@ func Connect(connection string) (DbBox, error) {
 			return dbox, errors.New("unable to connect to postgresql database!")
 		}
 	} else if u.Scheme == "mysql" {
+		dbox.IsMysql = true
 		port := "3306"
 		if u.Port() != "" {
 			port = u.Port()

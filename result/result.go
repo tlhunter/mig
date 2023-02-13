@@ -97,7 +97,6 @@ func (r Response) Display(encode bool) error {
 	if encode {
 		if r.Serializable != nil {
 			serialized, err := json.Marshal(r.Serializable)
-
 			if err != nil {
 				fmt.Println("unable to serialize custom output json")
 				return err
@@ -106,7 +105,6 @@ func (r Response) Display(encode bool) error {
 			fmt.Println(string(serialized))
 		} else {
 			serialized, err := json.Marshal(r)
-
 			if err != nil {
 				fmt.Println("unable to serialize response output json")
 				return err

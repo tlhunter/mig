@@ -9,7 +9,6 @@ import (
 
 func TestGetQueriesFromFile(t *testing.T) {
 	pair, err := GetQueriesFromFile("../tests/postgres/20230101120058_add_users_table.sql")
-
 	if err != nil {
 		t.Log("had an error", err)
 		t.Fail()

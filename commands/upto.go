@@ -21,7 +21,6 @@ type CommandUptoResult struct {
 
 func CommandUpto(cfg config.MigConfig, target string) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("database connection error", "db_conn", err)
 	}
@@ -30,15 +29,12 @@ func CommandUpto(cfg config.MigConfig, target string) result.Response {
 
 	// First call to GetStatus is mostly unused. if it fails then don't continue.
 	status, err := migrations.GetStatus(cfg, dbox)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("Encountered an error trying to get migrations status!", "retrieve_status", err)
 	}
-
 	if status.Skipped > 0 {
 		return *result.NewError("Refusing to run with skipped migrations! Run `mig status` for details.", "abort_skipped_migrations")
 	}
-
 	if status.Next == "" {
 		return *result.NewError("There are no migrations to run.", "no_migrations")
 	}
@@ -71,16 +67,17 @@ func CommandUpto(cfg config.MigConfig, target string) result.Response {
 	}
 
 	locked, err := database.ObtainLock(dbox)
-
 	if err != nil {
 		return *result.NewErrorWithDetails("Error obtaining lock for migration!", "obtain_lock", err)
 	}
-
 	if !locked {
 		return *result.NewError("Unable to obtain lock for migration!", "obtain_lock")
 	}
 
 	highest, err := migrations.GetHighestValues(dbox)
+	if err != nil {
+		return *result.NewErrorWithDetails("Unable to determine highest migration!", "unable_determine_highest", err)
+	}
 	batchId := highest.Batch
 
 	var executedMigrations []migrations.MigrationRow
@@ -92,9 +89,11 @@ func CommandUpto(cfg config.MigConfig, target string) result.Response {
 
 	for {
 		status, err := migrations.GetStatus(cfg, dbox)
+		if err != nil {
+			return *result.NewErrorWithDetails("Unable to get migration status!", "retrieve_status", err)
+		}
 
 		next := status.Next
-
 		if next == "" {
 			break
 		}
@@ -102,22 +101,12 @@ func CommandUpto(cfg config.MigConfig, target string) result.Response {
 		filename := cfg.Migrations + "/" + next
 
 		queries, err := migrations.GetQueriesFromFile(filename)
-
 		if err != nil {
-			// TODO: Should tell user the `filename`
+			// TODO: Should tell user the `filename` that caused the error
 			return *result.NewErrorWithDetails("Error attempting to read next migration file!", "read_next_migration", err)
 		}
 
-		var query string
-
-		if queries.UpTx {
-			query = BEGIN.For(dbox.Type) + queries.Up + END.For(dbox.Type)
-		} else {
-			query = queries.Up
-		}
-
-		_, err = dbox.Db.Exec(query)
-
+		err = dbox.ExecMaybeTx(queries.Up, queries.UpTx)
 		if err != nil {
 			return *result.NewErrorWithDetails("Encountered an error while running migration!", "migration_failed", err)
 		}
@@ -125,7 +114,6 @@ func CommandUpto(cfg config.MigConfig, target string) result.Response {
 		res.AddSuccessLn(color.GreenString("Migration %s was successfully applied!", next))
 
 		migration, err := migrations.AddMigrationWithBatch(dbox, next, batchId)
-
 		if err != nil {
 			res.SetError("The migration query executed but unable to track it in the migrations table!", "untracked_migration")
 			res.AddErrorLn("You may want to manually add it and investigate the error.")
@@ -134,19 +122,16 @@ func CommandUpto(cfg config.MigConfig, target string) result.Response {
 		}
 
 		executedMigrations = append(executedMigrations, migration)
-
 		if next == target {
 			break
 		}
 	}
 
 	released, err := database.ReleaseLock(dbox)
-
 	if err != nil {
 		res.SetError("Error releasing lock after running migration!", "release_lock")
 		return *res
 	}
-
 	if !released {
 		res.SetError("Unable to release lock after running migration!", "release_lock")
 	}

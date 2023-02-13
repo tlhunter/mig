@@ -35,7 +35,7 @@ func GetConfig() (MigConfig, []string, error) {
 	} else if envConfig.Connection != "" {
 		config.Connection = envConfig.Connection
 	} else {
-		return config, subcommands, errors.New("unable to determinte server connection")
+		return config, subcommands, errors.New("unable to determine server connection")
 	}
 
 	if flagConfig.Migrations != "" {
