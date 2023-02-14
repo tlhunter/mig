@@ -9,9 +9,6 @@ import (
 
 func Dispatch(cfg config.MigConfig, subcommands []string) result.Response {
 	var res result.Response
-	if len(subcommands) == 0 {
-		res.SetError("usage: mig <command>", "command_usage")
-	}
 
 	switch subcommands[0] {
 	case "create":
