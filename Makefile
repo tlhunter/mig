@@ -26,8 +26,17 @@ publish: build
 	git tag "v$(MIG_VERSION)"
 	git push origin main "v$(MIG_VERSION)"
 
+# unit tests
 test: build
 	go test -v ./...
+
+# integration tests
+#integration: build
+#	cd tests/postgres
+#	sh ../test.mjs
+#	cd ../mysql
+#	sh ../test.mjs
+#	cd ../..
 
 clean:
 	rm mig || true
