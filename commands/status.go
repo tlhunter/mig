@@ -86,6 +86,7 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 
 	if !existMigrations && !existLock {
 		res := result.NewError("The tables used for tracking migrations are missing.", "missing_tables")
+		res.ExitStatus = 9
 
 		res.AddErrorLn(color.WhiteString("This likely means that mig hasn't yet been initialized."))
 		res.AddErrorLn(color.WhiteString("This can be solved by running the following command:"))
@@ -96,6 +97,7 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 
 	if !existMigrations {
 		res := *result.NewError("The 'migrations' table is missing but the 'migrations_lock' table is present!", "missing_migrations_table")
+		res.ExitStatus = 9
 		res.AddErrorLn("This might mean that data has been corrupted and that migration status is missing.")
 		res.AddErrorLn("Consider looking into the root cause of the problem.")
 		res.AddErrorLn("The quickest fix is to delete the lock table and initialize again:")
@@ -106,6 +108,7 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 
 	if !existLock {
 		res := *result.NewError("The 'migrations' table is present but the 'migrations_lock' table is missing!", "missing_lock_table")
+		res.ExitStatus = 9
 		res.AddErrorLn("This might mean that data has been corrupted.")
 		res.AddErrorLn("Consider looking into the cause of the problem.")
 		res.AddErrorLn("The quickest fix is backup the migrations table data, initialize again, then restore the data:")

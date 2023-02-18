@@ -162,7 +162,15 @@ make
 
 ### Testing
 
-The following commands let you easily spin up databases within Docker for testing:
+There are some unit tests. Those can be run with the following command:
+
+```sh
+make test
+```
+
+However most of the tests are available as integration tests. Those require active databases.
+
+The following commands spin up databases within Docker for local testing:
 
 ```sh
 docker run --name some-postgres -p 5432:5432 \
@@ -172,3 +180,19 @@ docker run --name some-mysql -p 3306:3306 \
 ```
 
 The `tests/<DBMS>` directories contain config files and migrations to experiment with functionality.
+
+Run the following commands to run the different integration tests:
+
+```sh
+npm install -g zx
+
+pushd tests/postgres
+node ../test.mjs
+popd
+
+pushd tests/mysql
+node ../test.mjs
+popd
+```
+
+Unfortunately the integration tests currently require that Node.js also be installed. This will be fixed in the future.
