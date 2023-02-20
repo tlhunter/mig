@@ -4,7 +4,7 @@
 
 ![mig list screenshot](./docs/screenshot-mig-list.png)
 
-`mig` currently supports **PostgreSQL** and **MySQL** with plans to add more.
+`mig` currently supports **PostgreSQL**, **MySQL**, and **SQLite**. Pull requests to support other DBMS are appreciated.
 
 `mig` isn't quite yet ready for production. When it is `mig` will be released as version 1.0.
 
@@ -33,12 +33,15 @@ mig --credentials="protocol://user:pass@host:port/dbname"
 MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
 ```
 
-Currently, `mig` supports protocols of `postgresql` and `mysql` with plans to support more. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database:
+Currently, `mig` supports protocols of `postgresql`, `mysql`, and `sqlite`. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database for these different database systems:
 
 ```sh
 mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?tls=disable"
 mig --credentials="mysql://user:hunter2@localhost:3306/dbname?tls=disable"
+mig --credentials="sqlite://localhost/path/to/database.db"
 ```
+
+> Note that SQLite is special in order to fit the URL format. Path values essentially have the first slash stripped. That means `localhost/foo.db` translates to `foo.db`, `localhost//tmp/foo.db` is `/tmp/foo.db`, `localhost/../foo.db` is `../foo.db`, etc. This is unfortunate and will likely change.
 
 There are three connection string options for configuring secure databse connections:
 
@@ -162,15 +165,7 @@ make
 
 ### Testing
 
-There are some unit tests. Those can be run with the following command:
-
-```sh
-make test
-```
-
-However most of the tests are available as integration tests. Those require active databases.
-
-The following commands spin up databases within Docker for local testing:
+The following commands let you easily spin up databases within Docker for testing:
 
 ```sh
 docker run --name some-postgres -p 5432:5432 \
@@ -180,19 +175,3 @@ docker run --name some-mysql -p 3306:3306 \
 ```
 
 The `tests/<DBMS>` directories contain config files and migrations to experiment with functionality.
-
-Run the following commands to run the different integration tests:
-
-```sh
-npm install -g zx
-
-pushd tests/postgres
-node ../test.mjs
-popd
-
-pushd tests/mysql
-node ../test.mjs
-popd
-```
-
-Unfortunately the integration tests currently require that Node.js also be installed. This will be fixed in the future.

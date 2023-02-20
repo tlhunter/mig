@@ -20,7 +20,7 @@ func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
 		panic("unknown database: " + dbox.Type)
 	}
 
-	rows, err := dbox.Db.Query("SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;") // query is the same for MySQL and Postgres
+	rows, err := dbox.Db.Query("SELECT id, name, batch, migration_time FROM migrations ORDER BY id ASC;") // same for MySQL, Postgres, Sqlite
 	if err != nil {
 		return migRows, err
 	}
