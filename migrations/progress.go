@@ -2,6 +2,8 @@ package migrations
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/tlhunter/mig/database"
 )
@@ -14,8 +16,8 @@ var (
 	}
 	ADD = database.QueryBox{
 		Postgres: `INSERT INTO migrations (id, name, batch, migration_time) VALUES ($1, $2, $3, NOW()) RETURNING id, name, batch, migration_time;`,
-		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());`,
-		Sqlite:   `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());`,
+		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());`, // TODO: Transaction
+		Sqlite:   `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING id, name, batch, migration_time;`,
 	}
 	ULTIMATE = database.QueryBox{
 		Postgres: `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
@@ -49,13 +51,25 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 		return migration, err
 	}
 
-	if dbox.Type == "mysql" {
+	if dbox.IsMysql { // TODO: Transaction
 		// MySQL provides no easy RETURNING equivalent, so we'll fake it and omit the calculated timestamp
 		_, err = dbox.Exec(ADD, highest.Id, migrationName, highest.Batch)
 		migration.Id = highest.Id
 		migration.Name = migrationName
 		migration.Batch = highest.Batch
 		migration.Time = nil
+	} else if dbox.IsSqlite {
+		// This branch is needed as sqlite doesn't provide column type information when using a RETURNING clause.
+		// This means that we need to manually convert the returned timestamp from a string to a time.Time.
+		// @see https://github.com/mattn/go-sqlite3/issues/951
+		var tempTime string
+		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &tempTime)
+		fmt.Println(tempTime)
+		parsed, err := time.Parse(time.DateTime, tempTime)
+		if err != nil {
+
+		}
+		migration.Time = &parsed
 	} else {
 		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
 	}
@@ -77,13 +91,25 @@ func AddMigrationWithBatch(dbox database.DbBox, migrationName string, batch int)
 		return migration, err
 	}
 
-	if dbox.Type == "mysql" {
+	if dbox.IsMysql { // TODO: Transaction
 		// MySQL provides no easy RETURNING equivalent, so we'll fake it and omit the calculated timestamp
 		_, err = dbox.Exec(ADD, highest.Id, migrationName, highest.Batch)
 		migration.Id = highest.Id
 		migration.Name = migrationName
 		migration.Batch = batch
 		migration.Time = nil
+	} else if dbox.IsSqlite {
+		// This branch is needed as sqlite doesn't provide column type information when using a RETURNING clause.
+		// This means that we need to manually convert the returned timestamp from a string to a time.Time.
+		// @see https://github.com/mattn/go-sqlite3/issues/951
+		var tempTime string
+		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &tempTime)
+		fmt.Println(tempTime)
+		parsed, err := time.Parse(time.DateTime, tempTime)
+		if err != nil {
+
+		}
+		migration.Time = &parsed
 	} else {
 		err = dbox.QueryRow(ADD, highest.Id, migrationName, batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
 	}

@@ -16,7 +16,7 @@ type MigrationRow struct {
 func ListRows(dbox database.DbBox) ([]MigrationRow, error) {
 	var migRows []MigrationRow
 
-	if !dbox.IsMysql && !dbox.IsPostgres {
+	if !dbox.IsMysql && !dbox.IsPostgres && !dbox.IsSqlite {
 		panic("unknown database: " + dbox.Type)
 	}
 

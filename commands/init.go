@@ -121,7 +121,7 @@ func sqliteInit(dbox database.DbBox) error {
 		id serial NOT NULL,
 		name varchar(255) NULL,
 		batch int4 NULL,
-		migration_time timestamptz NULL,
+		migration_time timestamp NULL,
 		CONSTRAINT migrations_pkey PRIMARY KEY (id)
 	);`)
 	if err != nil {
