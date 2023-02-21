@@ -12,11 +12,6 @@ var (
 		Mysql:    `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`,
 		Sqlite:   `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`, // TODO: This returns two nils instead of an empty row?
 	}
-	ADD = database.QueryBox{
-		Postgres: `INSERT INTO migrations (id, name, batch, migration_time) VALUES ($1, $2, $3, NOW()) RETURNING id, name, batch, migration_time;`,
-		Mysql:    `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());`, // TODO: Transaction
-		Sqlite:   `INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING id, name, batch, migration_time;`,
-	}
 	ULTIMATE = database.QueryBox{
 		Postgres: `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
 		Mysql:    `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
@@ -44,20 +39,18 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 	var migration MigrationRow
 
 	highest, err := GetHighestValues(dbox)
-
 	if err != nil {
 		return migration, err
 	}
 
-	if dbox.IsMysql { // TODO: Transaction
-		// MySQL provides no easy RETURNING equivalent, so we'll fake it and omit the calculated timestamp
-		_, err = dbox.Exec(ADD, highest.Id, migrationName, highest.Batch)
-		migration.Id = highest.Id
-		migration.Name = migrationName
-		migration.Batch = highest.Batch
-		migration.Time = nil
+	if dbox.IsPostgres {
+		migration, err = postgresAddMigration(dbox, highest.Id, migrationName, highest.Batch)
+	} else if dbox.IsMysql {
+		migration, err = mysqlAddMigration(dbox, highest.Id, migrationName, highest.Batch)
+	} else if dbox.IsSqlite {
+		migration, err = sqliteAddMigration(dbox, highest.Id, migrationName, highest.Batch)
 	} else {
-		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+		panic("unknown database: " + dbox.Type)
 	}
 
 	if err != nil {
@@ -67,26 +60,75 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 	return migration, nil
 }
 
+func postgresAddMigration(dbox database.DbBox, id int, name string, batchId int) (MigrationRow, error) {
+	var migration MigrationRow
+
+	err := dbox.Db.
+		QueryRow(`INSERT INTO migrations (id, name, batch, migration_time) VALUES ($1, $2, $3, NOW()) RETURNING id, name, batch, migration_time;`, id, name, batchId).
+		Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+
+	return migration, err
+}
+
+func mysqlAddMigration(dbox database.DbBox, id int, name string, batchId int) (MigrationRow, error) {
+	var migration MigrationRow
+
+	tx, err := dbox.Db.Begin()
+	if err != nil {
+		return migration, err
+	}
+
+	defer tx.Rollback()
+
+	_, err = tx.Exec("INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, NOW());", id, name, batchId)
+	if err != nil {
+		return migration, err
+	}
+
+	// Technically, the only value we need is the time, since that's the only value that the database determins
+	err = tx.
+		QueryRow("SELECT id, name, batch, migration_time FROM migrations WHERE id = ?;", id).
+		Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+	if err != nil {
+		return migration, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return migration, err
+	}
+
+	return migration, nil
+}
+
+func sqliteAddMigration(dbox database.DbBox, id int, name string, batchId int) (MigrationRow, error) {
+	var migration MigrationRow
+
+	err := dbox.Db.
+		QueryRow(`INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING id, name, batch, migration_time;`, id, name, batchId).
+		Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+
+	return migration, err
+}
+
 // upto, all
 func AddMigrationWithBatch(dbox database.DbBox, migrationName string, batch int) (MigrationRow, error) {
 	var migration MigrationRow
 
 	highest, err := GetHighestValues(dbox)
-
 	if err != nil {
 		return migration, err
 	}
 
-	if dbox.IsMysql { // TODO: Transaction
-		// MySQL provides no easy RETURNING equivalent, so we'll fake it and omit the calculated timestamp
-		_, err = dbox.Exec(ADD, highest.Id, migrationName, highest.Batch)
-		migration.Id = highest.Id
-		migration.Name = migrationName
-		migration.Batch = batch
-		migration.Time = nil
+	if dbox.IsPostgres {
+		migration, err = postgresAddMigration(dbox, highest.Id, migrationName, batch)
+	} else if dbox.IsMysql {
+		migration, err = mysqlAddMigration(dbox, highest.Id, migrationName, batch)
+	} else if dbox.IsSqlite {
+		migration, err = sqliteAddMigration(dbox, highest.Id, migrationName, batch)
 	} else {
-		err = dbox.QueryRow(ADD, highest.Id, migrationName, batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+		panic("unknown database: " + dbox.Type)
 	}
+
 	if err != nil {
 		return migration, err
 	}
@@ -102,7 +144,6 @@ func RemoveMigration(dbox database.DbBox, migration string, id int) error {
 	var lastName string
 
 	err := dbox.QueryRow(ULTIMATE).Scan(&lastId, &lastName)
-
 	if err != nil {
 		return err
 	}
@@ -112,9 +153,11 @@ func RemoveMigration(dbox database.DbBox, migration string, id int) error {
 	}
 
 	result, err := dbox.Exec(DELETE, id, migration)
+	if err != nil {
+		return err
+	}
 
 	affected, err := result.RowsAffected()
-
 	if err != nil {
 		return err
 	}
@@ -132,7 +175,6 @@ func GetHighestValues(dbox database.DbBox) (BatchAndId, error) {
 	var count int
 
 	err := dbox.QueryRow(COUNT).Scan(&count)
-
 	if err != nil {
 		return highest, err
 	}
@@ -146,7 +188,6 @@ func GetHighestValues(dbox database.DbBox) (BatchAndId, error) {
 	}
 
 	err = dbox.QueryRow(HIGHEST).Scan(&highest.Batch, &highest.Id)
-
 	if err != nil {
 		return highest, err
 	}
