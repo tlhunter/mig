@@ -20,7 +20,7 @@ WHERE
 	tablename  = 'migrations'
 ) AS table_exists;`,
 	Mysql:  `CALL sys.table_exists(DATABASE(), 'migrations', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
-	Sqlite: `SELECT name FROM sqlite_master WHERE type='table' AND name='migrations';`,
+	Sqlite: `SELECT COUNT(name) >= 1 AS table_is_present FROM sqlite_master WHERE type='table' AND name='migrations';`,
 }
 
 var EXIST_LOCK = database.QueryBox{
@@ -32,7 +32,7 @@ var EXIST_LOCK = database.QueryBox{
 		tablename  = 'migrations_lock'
 	) AS table_exists;`,
 	Mysql:  `CALL sys.table_exists(DATABASE(), 'migrations_lock', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
-	Sqlite: `SELECT name FROM sqlite_master WHERE type='table' AND name='migrations_lock';`,
+	Sqlite: `SELECT COUNT(name) >= 1 AS table_is_present FROM sqlite_master WHERE type='table' AND name='migrations_lock';`,
 }
 
 var DESCRIBE = database.QueryBox{
