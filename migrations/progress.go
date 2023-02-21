@@ -2,8 +2,6 @@ package migrations
 
 import (
 	"errors"
-	"fmt"
-	"time"
 
 	"github.com/tlhunter/mig/database"
 )
@@ -58,18 +56,6 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 		migration.Name = migrationName
 		migration.Batch = highest.Batch
 		migration.Time = nil
-	} else if dbox.IsSqlite {
-		// This branch is needed as sqlite doesn't provide column type information when using a RETURNING clause.
-		// This means that we need to manually convert the returned timestamp from a string to a time.Time.
-		// @see https://github.com/mattn/go-sqlite3/issues/951
-		var tempTime string
-		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &tempTime)
-		fmt.Println(tempTime)
-		parsed, err := time.Parse(time.DateTime, tempTime)
-		if err != nil {
-
-		}
-		migration.Time = &parsed
 	} else {
 		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
 	}
@@ -98,18 +84,6 @@ func AddMigrationWithBatch(dbox database.DbBox, migrationName string, batch int)
 		migration.Name = migrationName
 		migration.Batch = batch
 		migration.Time = nil
-	} else if dbox.IsSqlite {
-		// This branch is needed as sqlite doesn't provide column type information when using a RETURNING clause.
-		// This means that we need to manually convert the returned timestamp from a string to a time.Time.
-		// @see https://github.com/mattn/go-sqlite3/issues/951
-		var tempTime string
-		err = dbox.QueryRow(ADD, highest.Id, migrationName, highest.Batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &tempTime)
-		fmt.Println(tempTime)
-		parsed, err := time.Parse(time.DateTime, tempTime)
-		if err != nil {
-
-		}
-		migration.Time = &parsed
 	} else {
 		err = dbox.QueryRow(ADD, highest.Id, migrationName, batch).Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
 	}
