@@ -189,17 +189,17 @@ Run the following commands to run the different integration tests:
 ```sh
 npm install -g zx
 
-pushd tests/postgres
-node ../test.mjs
-popd
-
-pushd tests/mysql
-node ../test.mjs
-popd
-
-pushd tests/sqlite
+pushd tests/postgres # or mysql or sqlite
 node ../test.mjs
 popd
 ```
 
 Unfortunately the integration tests currently require that Node.js also be installed. This will be fixed in the future.
+
+For a fast local development cycle, go into the `tests/sqlite` directory and then execute the following one liner after you've made code changes:
+
+```sh
+clear ; pushd ../.. && make && popd && rm test.db ; ../test.mjs
+```
+
+This recompiles the binary, deletes the sqlite database (thus resetting the state of the database), and runs the suite of acceptance tests.
