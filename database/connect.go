@@ -141,10 +141,8 @@ func Connect(connection string) (DbBox, error) {
 		}
 	} else if u.Scheme == "sqlite" { // or sqlite3?
 		dbox.IsSqlite = true
-		// TODO: What should the connection URL look like?
-		// sqlite://user:pass@watever/file.db
-		// sqlite://user:pass@watever//tmp/file.db
-		// sqlite3://user:pass@watever/./file.db
+
+		// TODO: The connection format for sqlite sucks. Maybe use "sqlite:/path.db" instead?
 
 		hostname := u.Hostname()
 		if hostname != "localhost" && hostname != "127.0.0.1" && hostname != "::1" {
