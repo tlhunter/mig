@@ -11,6 +11,11 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# SQLite Database
+*.db
+*.sqlite
+
+# Binaries
 /mig
 /mig.exe
 /mig-linux-amd64

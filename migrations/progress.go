@@ -10,18 +10,22 @@ var (
 	HIGHEST = database.QueryBox{
 		Postgres: `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`,
 		Mysql:    `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`,
+		Sqlite:   `SELECT (SELECT batch FROM migrations ORDER BY batch DESC LIMIT 1) AS highest_batch, (SELECT id FROM migrations ORDER BY id DESC LIMIT 1) AS highest_id;`, // TODO: This returns two nils instead of an empty row?
 	}
 	ULTIMATE = database.QueryBox{
 		Postgres: `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
 		Mysql:    `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
+		Sqlite:   `SELECT id, name FROM migrations ORDER BY id DESC LIMIT 1;`,
 	}
 	DELETE = database.QueryBox{
 		Postgres: `DELETE FROM migrations WHERE id = $1 AND name = $2;`,
 		Mysql:    `DELETE FROM migrations WHERE id = ? AND name = ?;`,
+		Sqlite:   `DELETE FROM migrations WHERE id = ? AND name = ?;`,
 	}
 	COUNT = database.QueryBox{
 		Postgres: `SELECT COUNT(*) AS count FROM migrations;`,
 		Mysql:    `SELECT COUNT(*) AS count FROM migrations;`,
+		Sqlite:   `SELECT COUNT(*) AS count FROM migrations;`,
 	}
 )
 
@@ -43,6 +47,8 @@ func AddMigration(dbox database.DbBox, migrationName string) (MigrationRow, erro
 		migration, err = postgresAddMigration(dbox, highest.Id, migrationName, highest.Batch)
 	} else if dbox.IsMysql {
 		migration, err = mysqlAddMigration(dbox, highest.Id, migrationName, highest.Batch)
+	} else if dbox.IsSqlite {
+		migration, err = sqliteAddMigration(dbox, highest.Id, migrationName, highest.Batch)
 	} else {
 		panic("unknown database: " + dbox.Type)
 	}
@@ -94,6 +100,16 @@ func mysqlAddMigration(dbox database.DbBox, id int, name string, batchId int) (M
 	return migration, nil
 }
 
+func sqliteAddMigration(dbox database.DbBox, id int, name string, batchId int) (MigrationRow, error) {
+	var migration MigrationRow
+
+	err := dbox.Db.
+		QueryRow(`INSERT INTO migrations (id, name, batch, migration_time) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING id, name, batch, migration_time;`, id, name, batchId).
+		Scan(&migration.Id, &migration.Name, &migration.Batch, &migration.Time)
+
+	return migration, err
+}
+
 // upto, all
 func AddMigrationWithBatch(dbox database.DbBox, migrationName string, batch int) (MigrationRow, error) {
 	var migration MigrationRow
@@ -107,6 +123,8 @@ func AddMigrationWithBatch(dbox database.DbBox, migrationName string, batch int)
 		migration, err = postgresAddMigration(dbox, highest.Id, migrationName, batch)
 	} else if dbox.IsMysql {
 		migration, err = mysqlAddMigration(dbox, highest.Id, migrationName, batch)
+	} else if dbox.IsSqlite {
+		migration, err = sqliteAddMigration(dbox, highest.Id, migrationName, batch)
 	} else {
 		panic("unknown database: " + dbox.Type)
 	}

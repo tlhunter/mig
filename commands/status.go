@@ -19,7 +19,8 @@ WHERE
 	schemaname = 'public' AND
 	tablename  = 'migrations'
 ) AS table_exists;`,
-	Mysql: `CALL sys.table_exists(DATABASE(), 'migrations', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Mysql:  `CALL sys.table_exists(DATABASE(), 'migrations', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Sqlite: `SELECT COUNT(name) >= 1 AS table_is_present FROM sqlite_master WHERE type='table' AND name='migrations';`,
 }
 
 var EXIST_LOCK = database.QueryBox{
@@ -30,7 +31,8 @@ var EXIST_LOCK = database.QueryBox{
 		schemaname = 'public' AND
 		tablename  = 'migrations_lock'
 	) AS table_exists;`,
-	Mysql: `CALL sys.table_exists(DATABASE(), 'migrations_lock', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Mysql:  `CALL sys.table_exists(DATABASE(), 'migrations_lock', @table_type); SELECT @table_type LIKE 'BASE TABLE';`,
+	Sqlite: `SELECT COUNT(name) >= 1 AS table_is_present FROM sqlite_master WHERE type='table' AND name='migrations_lock';`,
 }
 
 var DESCRIBE = database.QueryBox{
@@ -44,12 +46,14 @@ WHERE
 	table_name = 'migrations' OR table_name = 'migrations_lock'
 ORDER BY
 	table_name, column_name;`,
-	Mysql: `DESC migrations;`,
+	Mysql:  `DESC migrations;`,                 // unused
+	Sqlite: `pragma table_info('migrations');`, // unused
 }
 
 var LOCK_STATUS = database.QueryBox{
 	Postgres: `SELECT is_locked FROM migrations_lock WHERE index = 1;`,
 	Mysql:    `SELECT is_locked FROM migrations_lock WHERE ` + "`index`" + ` = 1;`,
+	Sqlite:   `SELECT is_locked FROM migrations_lock WHERE "index" = 1;`,
 }
 
 type StatusResponse struct {
@@ -121,10 +125,13 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 
 	res := result.NewSerializable("", "")
 
-	if dbox.Type == "mysql" {
-		// The following gnarly comparison checks need to be rebuilt first
+	if dbox.IsMysql {
+		// TODO: rebuild the gnarly checks
 		res.AddSuccessLn(color.YellowString("migration table description check is currently unimplemented for mysql."))
-	} else {
+	} else if dbox.IsSqlite {
+		// TODO: rebuild the gnarly checks
+		res.AddSuccessLn(color.YellowString("migration table description check is currently unimplemented for sqlite."))
+	} else if dbox.IsPostgres {
 		rows, err := dbox.Query(DESCRIBE)
 		if err != nil {
 			return *result.NewErrorWithDetails("unable to describe the migration tables!", "unable_describe", err)
@@ -170,6 +177,8 @@ func CommandStatus(cfg config.MigConfig) result.Response {
 		if table != "migrations_lock" || column != "is_locked" || data != "integer" {
 			return *result.NewError("expected migrations_lock.is_locked of type integer", "invalid_locked_type")
 		}
+	} else {
+		panic("unknown database: " + dbox.Type)
 	}
 
 	// Check if locked

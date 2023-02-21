@@ -18,6 +18,8 @@ func CommandInit(cfg config.MigConfig) result.Response {
 		err = postgresInit(dbox)
 	} else if dbox.IsMysql {
 		err = mysqlInit(dbox)
+	} else if dbox.IsSqlite {
+		err = sqliteInit(dbox)
 	} else {
 		panic("unknown database: " + dbox.Type)
 	}
@@ -96,6 +98,46 @@ func mysqlInit(dbox database.DbBox) error {
 	}
 
 	_, err = tx.Exec(`INSERT INTO migrations_lock SET ` + "`index`" + ` = 1, is_locked = 0;`)
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func sqliteInit(dbox database.DbBox) error {
+	tx, err := dbox.Db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`CREATE TABLE migrations (
+		id serial NOT NULL,
+		name varchar(255) NULL,
+		batch int4 NULL,
+		migration_time timestamp NULL,
+		CONSTRAINT migrations_pkey PRIMARY KEY (id)
+	);`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`CREATE TABLE migrations_lock (
+		"index" serial NOT NULL,
+		is_locked int4 NULL,
+		CONSTRAINT migrations_lock_pkey PRIMARY KEY ("index")
+	);`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`INSERT INTO migrations_lock ("index", is_locked) VALUES(1, 0);`)
 	if err != nil {
 		return err
 	}

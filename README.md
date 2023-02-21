@@ -4,7 +4,7 @@
 
 ![mig list screenshot](./docs/screenshot-mig-list.png)
 
-`mig` currently supports **PostgreSQL** and **MySQL** with plans to add more.
+`mig` currently supports **PostgreSQL**, **MySQL**, and **SQLite**. Pull requests to support other DBMS are appreciated.
 
 `mig` isn't quite yet ready for production. When it is `mig` will be released as version 1.0.
 
@@ -33,12 +33,15 @@ mig --credentials="protocol://user:pass@host:port/dbname"
 MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
 ```
 
-Currently, `mig` supports protocols of `postgresql` and `mysql` with plans to support more. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database:
+Currently, `mig` supports protocols of `postgresql`, `mysql`, and `sqlite`. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database for these different database systems:
 
 ```sh
 mig --credentials="postgresql://user:hunter2@localhost:5432/dbname?tls=disable"
 mig --credentials="mysql://user:hunter2@localhost:3306/dbname?tls=disable"
+mig --credentials="sqlite://localhost/path/to/database.db"
 ```
+
+> Note that SQLite is special in order to fit the URL format. Path values essentially have the first slash stripped. That means `localhost/foo.db` translates to `foo.db`, `localhost//tmp/foo.db` is `/tmp/foo.db`, `localhost/../foo.db` is `../foo.db`, etc. This is unfortunate and will likely change.
 
 There are three connection string options for configuring secure databse connections:
 
@@ -186,13 +189,17 @@ Run the following commands to run the different integration tests:
 ```sh
 npm install -g zx
 
-pushd tests/postgres
-node ../test.mjs
-popd
-
-pushd tests/mysql
+pushd tests/postgres # or mysql or sqlite
 node ../test.mjs
 popd
 ```
 
 Unfortunately the integration tests currently require that Node.js also be installed. This will be fixed in the future.
+
+For a fast local development cycle, go into the `tests/sqlite` directory and then execute the following one liner after you've made code changes:
+
+```sh
+clear ; pushd ../.. && make && popd && rm test.db ; ../test.mjs
+```
+
+This recompiles the binary, deletes the sqlite database (thus resetting the state of the database), and runs the suite of acceptance tests.

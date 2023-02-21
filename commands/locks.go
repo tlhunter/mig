@@ -20,6 +20,8 @@ func CommandLock(cfg config.MigConfig) result.Response {
 		wasLocked, err = postgresLock(dbox)
 	} else if dbox.IsMysql {
 		wasLocked, err = mysqlLock(dbox)
+	} else if dbox.IsSqlite {
+		wasLocked, err = sqliteLock(dbox)
 	} else {
 		panic("unknown database: " + dbox.Type)
 	}
@@ -73,6 +75,33 @@ func mysqlLock(dbox database.DbBox) (bool, error) {
 	return wasLocked > 0, nil
 }
 
+func sqliteLock(dbox database.DbBox) (bool, error) {
+	tx, err := dbox.Db.Begin()
+	if err != nil {
+		return false, err
+	}
+
+	defer tx.Rollback()
+
+	var wasLocked int
+
+	err = tx.QueryRow(`SELECT is_locked AS was_locked FROM migrations_lock WHERE "index" = 1;`).Scan(&wasLocked)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = tx.Exec(`UPDATE migrations_lock SET is_locked = 1 WHERE "index" = 1;`)
+	if err != nil {
+		return false, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return false, err
+	}
+
+	return wasLocked > 0, nil
+}
+
 func CommandUnlock(cfg config.MigConfig) result.Response {
 	dbox, err := database.Connect(cfg.Connection)
 
@@ -88,6 +117,8 @@ func CommandUnlock(cfg config.MigConfig) result.Response {
 		wasLocked, err = postgresUnlock(dbox)
 	} else if dbox.IsMysql {
 		wasLocked, err = mysqlUnlock(dbox)
+	} else if dbox.IsSqlite {
+		wasLocked, err = sqliteUnlock(dbox)
 	} else {
 		panic("unknown database: " + dbox.Type)
 	}
@@ -130,6 +161,33 @@ func mysqlUnlock(dbox database.DbBox) (bool, error) {
 	}
 
 	_, err = tx.Exec("UPDATE migrations_lock SET is_locked = 0 WHERE `index` = 1;")
+	if err != nil {
+		return false, err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return false, err
+	}
+
+	return wasLocked > 0, nil
+}
+
+func sqliteUnlock(dbox database.DbBox) (bool, error) {
+	tx, err := dbox.Db.Begin()
+	if err != nil {
+		return false, err
+	}
+
+	defer tx.Rollback()
+
+	var wasLocked int
+
+	err = tx.QueryRow(`SELECT is_locked AS was_locked FROM migrations_lock WHERE "index" = 1;`).Scan(&wasLocked)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = tx.Exec(`UPDATE migrations_lock SET is_locked = 0 WHERE "index" = 1;`)
 	if err != nil {
 		return false, err
 	}

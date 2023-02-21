@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type DbBox struct {
@@ -16,6 +18,7 @@ type DbBox struct {
 
 	IsPostgres bool // indicates this connection is for PostgreSQL
 	IsMysql    bool // indicates this connection is for MySQL
+	IsSqlite   bool // indicates this connection is for Sqlite
 }
 
 func (dbox DbBox) GetQuery(qb QueryBox) string {
@@ -135,6 +138,23 @@ func Connect(connection string) (DbBox, error) {
 
 		if err != nil {
 			return dbox, errors.New("unable to connect to mysql database!")
+		}
+	} else if u.Scheme == "sqlite" { // or sqlite3?
+		dbox.IsSqlite = true
+
+		// TODO: The connection format for sqlite sucks. Maybe use "sqlite:/path.db" instead?
+
+		hostname := u.Hostname()
+		if hostname != "localhost" && hostname != "127.0.0.1" && hostname != "::1" {
+			return dbox, errors.New("sqlite connection requires a host name of localhost!")
+		}
+
+		path := strings.TrimPrefix(u.Path, "/") // /foo -> foo, //foo -> /foo
+
+		dbox.Db, err = sql.Open("sqlite3", path)
+
+		if err != nil {
+			return dbox, errors.New("unable to connect to sqlite database!")
 		}
 	} else {
 		return dbox, errors.New(fmt.Sprintf("mig doesn't support the '%s' database", u.Scheme))

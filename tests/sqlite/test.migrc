@@ -1,0 +1,2 @@
+MIG_CONNECTION="sqlite://localhost/test.db"
+MIG_MIGRATIONS="./"
