@@ -9,15 +9,17 @@ import (
 )
 
 func main() {
-	cfg, subcommands, err := config.GetConfig()
+	cfg, subcommands, bail := config.GetConfig()
 
 	var res result.Response
 
-	if err != nil && len(subcommands) == 0 {
+	if bail != nil && len(subcommands) == 0 {
 		res.SetError("usage: mig <command>", "command_usage")
-	} else if err != nil && len(subcommands) == 1 && subcommands[0] == "version" {
+	} else if bail != nil && len(subcommands) == 1 && subcommands[0] == "version" {
 		res = commands.CommandVersion(cfg)
-	} else if err == nil {
+	} else if bail != nil {
+		res = *bail
+	} else if bail == nil {
 		res = commands.Dispatch(cfg, subcommands)
 	}
 

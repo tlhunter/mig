@@ -1,8 +1,6 @@
 package config
 
-import (
-	"errors"
-)
+import "github.com/tlhunter/mig/result"
 
 const (
 	DEF_MIG_DIR = "./migrations"
@@ -15,7 +13,7 @@ type MigConfig struct {
 	OutputJson bool   // stdout should be valid JSON
 }
 
-func GetConfig() (MigConfig, []string, error) {
+func GetConfig() (MigConfig, []string, *result.Response) {
 	config := MigConfig{}
 
 	flagConfig, subcommands, _ := GetConfigFromProcessFlags()
@@ -25,7 +23,7 @@ func GetConfig() (MigConfig, []string, error) {
 	err := SetEnvFromConfigFile(flagConfig.MigRcPath) // reads .env and sets env vars but does not override
 
 	if err != nil {
-		return config, []string{}, err
+		return config, []string{}, nil
 	}
 
 	envConfig, _ := GetConfigFromEnvVars()
@@ -35,7 +33,7 @@ func GetConfig() (MigConfig, []string, error) {
 	} else if envConfig.Connection != "" {
 		config.Connection = envConfig.Connection
 	} else {
-		return config, subcommands, errors.New("unable to determine server connection")
+		return config, subcommands, result.NewError("unable to determine server connection", "bad_config")
 	}
 
 	if flagConfig.Migrations != "" {
