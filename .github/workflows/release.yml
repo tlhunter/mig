@@ -26,7 +26,6 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        pre_command: export CGO_ENABLED=1 # attempting to fix macOS SQLite bug
         goversion: "1.19"
         binary_name: "mig"
         md5sum: false
