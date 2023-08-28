@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-unit:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v4
+      with:
+        go-version: 1.21.0
+    - run: make test
+
+  test-sqlite:
+    name: "SQLite Integration Tests"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18.17.1
+    - uses: actions/setup-go@v4
+      with:
+        go-version: 1.21.0
+    - run: npm install -g zx
+    - run: make build
+    - run: cd tests/sqlite && ../test.mjs
