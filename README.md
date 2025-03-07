@@ -30,7 +30,7 @@ A SQL connection string supplies all of the credentials. It resembles a URL form
 
 ```sh
 mig --credentials="protocol://user:pass@host:port/dbname"
-MIG_CREDENTIALS="protocol://user:pass@host:port/dbname" mig
+MIG_CONNECTION="protocol://user:pass@host:port/dbname" mig
 ```
 
 `mig` currently supports protocols of `postgresql`, `mysql`, and `sqlite`. Internally `mig` loads the proper driver depending on the protocol. TLS checking can be set using query strings. Here's an example of how to connect to a local database for these different database systems:
